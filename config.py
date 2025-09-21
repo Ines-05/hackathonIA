@@ -13,6 +13,13 @@ class Config:
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_recycle": 300,
         "pool_pre_ping": True,
+        "pool_timeout": 20,
+        "pool_size": 10,
+        "max_overflow": 20,
+        "connect_args": {
+            "sslmode": "prefer",
+            "connect_timeout": 10,
+        }
     }
     
     # Upload configuration

@@ -160,13 +160,6 @@
             </div>
         </nav>
         
-        <!-- Main Content Area for Authenticated Users -->
-        <div class="md:pl-64 flex flex-col flex-1 min-h-screen">
-            <main class="flex-1">
-                {% block content %}{% endblock %}
-            </main>
-        </div>
-        
         <!-- Mobile Navigation -->
         <div class="md:hidden fixed bottom-0 left-0 right-0 navbar-mobile bg-white border-t border-gray-200 px-2 py-2">
             <div class="flex justify-around">
@@ -211,12 +204,14 @@
                 </div>
             </div>
         </nav>
-        
-        <!-- Public Content -->
-        <main>
+    {% endif %}
+
+    <!-- Main Content Area -->
+    <div class="{% if current_user.is_authenticated %}md:pl-64{% endif %} flex flex-col flex-1 min-h-screen">
+        <main class="flex-1">
             {% block content %}{% endblock %}
         </main>
-    {% endif %}
+    </div>
 
     <!-- Chatbot -->
     <div id="chatbot-container" class="fixed bottom-6 right-6 z-50">
