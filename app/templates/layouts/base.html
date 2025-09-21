@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if title %}{{ title }} - {% endif %}{{ config.APP_NAME }}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Configure Tailwind with Benin-inspired colors -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'benin-green': '#00A86B',
+                        'benin-yellow': '#FFD700',
+                        'benin-red': '#FF0000',
+                        'benin-blue': '#0066CC',
+                        primary: '#00A86B',
+                        secondary: '#FFD700',
+                        accent: '#FF0000'
+                    },
+                    fontFamily: {
+                        'sans': ['Poppins', 'Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #00A86B 0%, #0066CC 100%);
+        }
+        
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #00A86B 0%, #00C851 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(0, 168, 107, 0.3);
+        }
+        
+        .navbar-mobile {
+            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status-badge {
+            animation: pulse-status 2s infinite;
+        }
+        
+        @keyframes pulse-status {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        .map-container {
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .chatbot-bubble {
+            animation: bounce-subtle 2s infinite;
+        }
+        
+        @keyframes bounce-subtle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="fixed top-4 right-4 z-50 space-y-2">
+                {% for category, message in messages %}
+                    <div class="alert-{{ category }} max-w-sm px-4 py-3 rounded-lg shadow-lg transform transition-all duration-300 ease-in-out opacity-100">
+                        <div class="flex items-center">
+                            {% if category == 'success' %}
+                                <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                            {% elif category == 'error' %}
+                                <i class="fas fa-exclamation-circle text-red-500 mr-2"></i>
+                            {% elif category == 'warning' %}
+                                <i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>
+                            {% else %}
+                                <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                            {% endif %}
+                            <span class="text-sm font-medium">{{ message }}</span>
+                            <button onclick="this.parentElement.parentElement.remove()" class="ml-auto text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% if current_user.is_authenticated %}
+        <!-- Desktop Sidebar Navigation -->
+        <nav class="hidden md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col">
+            <div class="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto gradient-bg">
+                <div class="flex items-center flex-shrink-0 px-4">
+                    <h1 class="text-2xl font-bold text-white">
+                        <i class="fas fa-map-marked-alt mr-2"></i>
+                        FoncierMap
+                    </h1>
+                </div>
+                <div class="mt-8 flex-grow flex flex-col">
+                    <nav class="flex-1 px-2 space-y-1">
+                        <a href="{{ url_for('main.dashboard') }}" class="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-white hover:bg-white hover:bg-opacity-20 transition-colors">
+                            <i class="fas fa-tachometer-alt mr-3"></i>
+                            Tableau de Bord
+                        </a>
+                        <a href="{{ url_for('main.map_view') }}" class="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-white hover:bg-white hover:bg-opacity-20 transition-colors">
+                            <i class="fas fa-map mr-3"></i>
+                            Carte Interactive
+                        </a>
+                        <a href="{{ url_for('main.documents') }}" class="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-white hover:bg-white hover:bg-opacity-20 transition-colors">
+                            <i class="fas fa-file-alt mr-3"></i>
+                            Mes Documents
+                        </a>
+                        <a href="{{ url_for('main.profile') }}" class="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-white hover:bg-white hover:bg-opacity-20 transition-colors">
+                            <i class="fas fa-user mr-3"></i>
+                            Mon Profil
+                        </a>
+                    </nav>
+                    <div class="px-2">
+                        <div class="bg-white bg-opacity-10 rounded-lg p-3 text-white text-sm">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-user-circle mr-2"></i>
+                                <span class="font-medium">{{ current_user.full_name }}</span>
+                            </div>
+                            <a href="{{ url_for('auth.logout') }}" class="text-xs hover:underline flex items-center">
+                                <i class="fas fa-sign-out-alt mr-1"></i>
+                                Se déconnecter
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Main Content Area for Authenticated Users -->
+        <div class="md:pl-64 flex flex-col flex-1 min-h-screen">
+            <main class="flex-1">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+        
+        <!-- Mobile Navigation -->
+        <div class="md:hidden fixed bottom-0 left-0 right-0 navbar-mobile bg-white border-t border-gray-200 px-2 py-2">
+            <div class="flex justify-around">
+                <a href="{{ url_for('main.dashboard') }}" class="flex flex-col items-center p-2 text-gray-600 hover:text-primary transition-colors">
+                    <i class="fas fa-tachometer-alt text-lg mb-1"></i>
+                    <span class="text-xs">Accueil</span>
+                </a>
+                <a href="{{ url_for('main.map_view') }}" class="flex flex-col items-center p-2 text-gray-600 hover:text-primary transition-colors">
+                    <i class="fas fa-map text-lg mb-1"></i>
+                    <span class="text-xs">Carte</span>
+                </a>
+                <a href="{{ url_for('main.documents') }}" class="flex flex-col items-center p-2 text-gray-600 hover:text-primary transition-colors">
+                    <i class="fas fa-file-alt text-lg mb-1"></i>
+                    <span class="text-xs">Documents</span>
+                </a>
+                <a href="{{ url_for('main.profile') }}" class="flex flex-col items-center p-2 text-gray-600 hover:text-primary transition-colors">
+                    <i class="fas fa-user text-lg mb-1"></i>
+                    <span class="text-xs">Profil</span>
+                </a>
+            </div>
+        </div>
+        
+    {% else %}
+        <!-- Public Navigation -->
+        <nav class="bg-white shadow-md">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center">
+                        <h1 class="text-2xl font-bold text-primary">
+                            <i class="fas fa-map-marked-alt mr-2"></i>
+                            FoncierMap
+                        </h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <a href="{{ url_for('auth.login') }}" class="text-gray-600 hover:text-primary font-medium">
+                            Se connecter
+                        </a>
+                        <a href="{{ url_for('auth.register') }}" class="btn-primary text-white px-4 py-2 rounded-lg font-medium">
+                            S'inscrire
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Public Content -->
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+    {% endif %}
+
+    <!-- Chatbot -->
+    <div id="chatbot-container" class="fixed bottom-6 right-6 z-50">
+        <!-- Chatbot Button -->
+        <button id="chatbot-toggle" class="chatbot-bubble w-14 h-14 bg-primary text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center">
+            <i class="fas fa-comments text-xl"></i>
+        </button>
+        
+        <!-- Chatbot Window -->
+        <div id="chatbot-window" class="hidden absolute bottom-16 right-0 w-80 h-96 bg-white rounded-lg shadow-2xl border border-gray-200 flex flex-col">
+            <!-- Header -->
+            <div class="gradient-bg text-white p-4 rounded-t-lg flex justify-between items-center">
+                <div class="flex items-center">
+                    <i class="fas fa-robot mr-2"></i>
+                    <span class="font-medium">Assistant FoncierMap</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <!-- Language Selector -->
+                    <select id="chat-language" class="bg-white bg-opacity-20 text-white text-xs rounded px-2 py-1 border-none">
+                        <option value="fr">FR</option>
+                        <option value="fon">Fon</option>
+                        <option value="yoruba">Yoruba</option>
+                    </select>
+                    <button id="close-chatbot" class="text-white hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Messages -->
+            <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-3">
+                <div class="bg-gray-100 rounded-lg p-3 text-sm">
+                    <i class="fas fa-robot text-primary mr-2"></i>
+                    Bonjour ! Je suis là pour vous aider avec FoncierMap. Posez-moi vos questions !
+                </div>
+            </div>
+            
+            <!-- Input -->
+            <div class="p-4 border-t border-gray-200">
+                <div class="flex space-x-2">
+                    <input type="text" id="chat-input" placeholder="Tapez votre message..." class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                    <button id="send-message" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        // Auto-hide flash messages
+        setTimeout(() => {
+            document.querySelectorAll('[class*="alert-"]').forEach(alert => {
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateX(100%)';
+                setTimeout(() => alert.remove(), 300);
+            });
+        }, 5000);
+        
+        // Chatbot functionality
+        const chatbotToggle = document.getElementById('chatbot-toggle');
+        const chatbotWindow = document.getElementById('chatbot-window');
+        const closeChatbot = document.getElementById('close-chatbot');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendMessage = document.getElementById('send-message');
+        const chatLanguage = document.getElementById('chat-language');
+        
+        chatbotToggle.addEventListener('click', () => {
+            chatbotWindow.classList.toggle('hidden');
+        });
+        
+        closeChatbot.addEventListener('click', () => {
+            chatbotWindow.classList.add('hidden');
+        });
+        
+        function addMessage(message, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = isUser 
+                ? 'bg-primary text-white rounded-lg p-3 text-sm ml-8' 
+                : 'bg-gray-100 rounded-lg p-3 text-sm mr-8';
+            
+            if (isUser) {
+                messageDiv.innerHTML = `<i class="fas fa-user mr-2"></i>${message}`;
+            } else {
+                messageDiv.innerHTML = `<i class="fas fa-robot text-primary mr-2"></i>${message}`;
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function sendChatMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+            
+            addMessage(message, true);
+            chatInput.value = '';
+            
+            // Send to backend
+            fetch('/api/chatbot', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: message,
+                    language: chatLanguage.value
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                addMessage(data.response);
+            })
+            .catch(error => {
+                addMessage('Désolé, je ne peux pas répondre en ce moment. Veuillez réessayer.');
+            });
+        }
+        
+        sendMessage.addEventListener('click', sendChatMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendChatMessage();
+            }
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

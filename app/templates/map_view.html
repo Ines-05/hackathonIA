@@ -1,0 +1,366 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<div class="h-screen flex flex-col">
+    <!-- Map Header -->
+    <div class="bg-white shadow-sm border-b p-4 md:ml-64">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Carte Interactive</h1>
+                <p class="text-gray-600">Explorez les parcelles et leur statut de vérification</p>
+            </div>
+            
+            <!-- Map Controls -->
+            <div class="flex items-center space-x-4">
+                <!-- Search -->
+                <div class="relative">
+                    <input type="text" id="map-search" placeholder="Rechercher une parcelle..." 
+                           class="w-64 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+                </div>
+                
+                <!-- Filter Toggle -->
+                <button id="filter-toggle" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                    <i class="fas fa-filter mr-2"></i>
+                    Filtres
+                </button>
+                
+                <!-- My Location -->
+                <button id="locate-me" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
+                    <i class="fas fa-location-arrow"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Panel -->
+    <div id="filter-panel" class="hidden bg-white border-b p-4 md:ml-64 shadow-sm">
+        <div class="flex items-center space-x-6">
+            <div class="flex items-center space-x-2">
+                <label class="text-sm font-medium text-gray-700">Statut:</label>
+                <label class="flex items-center">
+                    <input type="checkbox" checked class="filter-status mr-2" data-status="Vérifié">
+                    <span class="w-3 h-3 bg-green-500 rounded-full mr-1"></span>
+                    <span class="text-sm">Vérifié</span>
+                </label>
+                <label class="flex items-center">
+                    <input type="checkbox" checked class="filter-status mr-2" data-status="En cours de traitement">
+                    <span class="w-3 h-3 bg-yellow-500 rounded-full mr-1"></span>
+                    <span class="text-sm">En cours</span>
+                </label>
+                <label class="flex items-center">
+                    <input type="checkbox" checked class="filter-status mr-2" data-status="Non conforme">
+                    <span class="w-3 h-3 bg-red-500 rounded-full mr-1"></span>
+                    <span class="text-sm">Non conforme</span>
+                </label>
+            </div>
+            
+            {% if current_user.is_authenticated %}
+                <div class="flex items-center">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="show-only-mine" class="mr-2">
+                        <span class="text-sm font-medium text-primary">Mes parcelles uniquement</span>
+                    </label>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Map Container -->
+    <div class="flex-1 relative">
+        <div id="main-map" class="w-full h-full md:ml-64"></div>
+        
+        <!-- Map Legend -->
+        <div class="absolute top-4 right-4 bg-white p-4 rounded-lg shadow-lg z-1000">
+            <h4 class="font-semibold text-gray-900 mb-3">Légende</h4>
+            <div class="space-y-2 text-sm">
+                <div class="flex items-center">
+                    <div class="w-4 h-4 bg-green-500 rounded-full mr-2"></div>
+                    <span>Vérifié ({{ all_parcels|selectattr('status', 'equalto', 'Vérifié')|list|length }})</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-4 h-4 bg-yellow-500 rounded-full mr-2"></div>
+                    <span>En cours ({{ all_parcels|selectattr('status', 'equalto', 'En cours de traitement')|list|length }})</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-4 h-4 bg-red-500 rounded-full mr-2"></div>
+                    <span>Non conforme ({{ all_parcels|selectattr('status', 'equalto', 'Non conforme')|list|length }})</span>
+                </div>
+                {% if current_user.is_authenticated %}
+                    <hr class="my-2">
+                    <div class="flex items-center">
+                        <div class="w-4 h-4 border-2 border-primary rounded-full mr-2"></div>
+                        <span class="text-primary font-medium">Mes parcelles</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Parcel Info Panel -->
+        <div id="parcel-info" class="hidden absolute bottom-4 left-4 bg-white p-4 rounded-lg shadow-lg z-1000 max-w-sm">
+            <div id="parcel-info-content">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="map-loading" class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-1000">
+            <div class="text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+                <p class="text-gray-600">Chargement de la carte...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Padding -->
+    <div class="md:hidden h-16"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let map;
+    let parcelLayers = {};
+    let userParcelIds = [{% for parcel in user_parcels %}{{ parcel.id }}{% if not loop.last %},{% endif %}{% endfor %}];
+    
+    // Initialize map
+    function initMap() {
+        map = L.map('main-map').setView([6.3703, 2.3912], 8); // Center on Benin
+        
+        // Add tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        // Load parcels
+        loadParcels();
+        
+        // Hide loading indicator
+        document.getElementById('map-loading').classList.add('hidden');
+    }
+    
+    // Load parcels from API
+    function loadParcels() {
+        fetch('/api/parcels/geojson')
+            .then(response => response.json())
+            .then(data => {
+                data.features.forEach(feature => {
+                    const parcelId = feature.properties.id;
+                    const isUserParcel = userParcelIds.includes(parcelId);
+                    
+                    const layer = L.geoJSON(feature, {
+                        style: {
+                            color: feature.properties.status_color,
+                            weight: isUserParcel ? 3 : 2,
+                            fillOpacity: 0.7,
+                            dashArray: isUserParcel ? '5, 5' : null
+                        }
+                    }).addTo(map);
+                    
+                    // Add popup
+                    const popupContent = createPopupContent(feature.properties);
+                    layer.bindPopup(popupContent);
+                    
+                    // Add click event for info panel
+                    layer.on('click', function() {
+                        showParcelInfo(feature.properties);
+                    });
+                    
+                    parcelLayers[parcelId] = {
+                        layer: layer,
+                        properties: feature.properties
+                    };
+                });
+            })
+            .catch(error => {
+                console.error('Error loading parcels:', error);
+                document.getElementById('map-loading').innerHTML = '<div class="text-center"><i class="fas fa-exclamation-triangle text-red-500 text-2xl mb-2"></i><p class="text-red-600">Erreur de chargement de la carte</p></div>';
+            });
+    }
+    
+    // Create popup content
+    function createPopupContent(properties) {
+        return `
+            <div class="p-2">
+                <h4 class="font-semibold text-lg">${properties.parcel_id}</h4>
+                <p class="text-sm text-gray-600 mb-2">${properties.address || 'Adresse non disponible'}</p>
+                
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm">Statut:</span>
+                        <span class="px-2 py-1 text-xs rounded-full" style="background-color: ${properties.status_color}20; color: ${properties.status_color}">
+                            ${properties.status}
+                        </span>
+                    </div>
+                    
+                    ${properties.area ? `
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">Superficie:</span>
+                            <span class="text-sm font-medium">${properties.area} m²</span>
+                        </div>
+                    ` : ''}
+                    
+                    ${properties.land_use ? `
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">Usage:</span>
+                            <span class="text-sm font-medium">${properties.land_use}</span>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm">Propriétaire:</span>
+                        <span class="text-sm font-medium">${properties.owner_name}</span>
+                    </div>
+                </div>
+                
+                <div class="mt-3 pt-3 border-t border-gray-200">
+                    <a href="/parcel/${properties.id}" class="text-primary hover:text-green-600 text-sm font-medium">
+                        Voir les détails →
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Show parcel info in side panel
+    function showParcelInfo(properties) {
+        const panel = document.getElementById('parcel-info');
+        const content = document.getElementById('parcel-info-content');
+        
+        content.innerHTML = `
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-semibold text-lg">${properties.parcel_id}</h3>
+                <button onclick="hideParcelInfo()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-3">
+                <div>
+                    <p class="text-sm text-gray-600">${properties.address || 'Adresse non disponible'}</p>
+                </div>
+                
+                <div class="flex items-center">
+                    <span class="px-3 py-1 text-sm rounded-full" style="background-color: ${properties.status_color}20; color: ${properties.status_color}">
+                        ${properties.status}
+                    </span>
+                </div>
+                
+                ${properties.area ? `
+                    <div class="text-sm">
+                        <i class="fas fa-ruler-combined mr-2 text-gray-400"></i>
+                        <span>${properties.area} m²</span>
+                    </div>
+                ` : ''}
+                
+                ${properties.land_use ? `
+                    <div class="text-sm">
+                        <i class="fas fa-home mr-2 text-gray-400"></i>
+                        <span>${properties.land_use}</span>
+                    </div>
+                ` : ''}
+                
+                <div class="text-sm">
+                    <i class="fas fa-user mr-2 text-gray-400"></i>
+                    <span>${properties.owner_name}</span>
+                </div>
+                
+                <div class="pt-3 border-t border-gray-200">
+                    <a href="/parcel/${properties.id}" class="block w-full text-center bg-primary text-white py-2 rounded-lg text-sm font-medium hover:bg-green-600 transition-colors">
+                        Voir les détails
+                    </a>
+                </div>
+            </div>
+        `;
+        
+        panel.classList.remove('hidden');
+    }
+    
+    // Hide parcel info panel
+    function hideParcelInfo() {
+        document.getElementById('parcel-info').classList.add('hidden');
+    }
+    
+    // Toggle filter panel
+    document.getElementById('filter-toggle').addEventListener('click', function() {
+        const panel = document.getElementById('filter-panel');
+        panel.classList.toggle('hidden');
+    });
+    
+    // Status filter functionality
+    document.querySelectorAll('.filter-status').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const status = this.dataset.status;
+            const show = this.checked;
+            
+            Object.values(parcelLayers).forEach(parcelData => {
+                if (parcelData.properties.status === status) {
+                    if (show) {
+                        map.addLayer(parcelData.layer);
+                    } else {
+                        map.removeLayer(parcelData.layer);
+                    }
+                }
+            });
+        });
+    });
+    
+    // Show only user parcels
+    {% if current_user.is_authenticated %}
+        document.getElementById('show-only-mine').addEventListener('change', function() {
+            const showOnlyMine = this.checked;
+            
+            Object.entries(parcelLayers).forEach(([parcelId, parcelData]) => {
+                const isUserParcel = userParcelIds.includes(parseInt(parcelId));
+                
+                if (showOnlyMine && !isUserParcel) {
+                    map.removeLayer(parcelData.layer);
+                } else if (!showOnlyMine) {
+                    // Check if status filter allows this parcel
+                    const statusFilter = document.querySelector(`[data-status="${parcelData.properties.status}"]`);
+                    if (statusFilter && statusFilter.checked) {
+                        map.addLayer(parcelData.layer);
+                    }
+                }
+            });
+        });
+    {% endif %}
+    
+    // Locate user
+    document.getElementById('locate-me').addEventListener('click', function() {
+        if (navigator.geolocation) {
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            navigator.geolocation.getCurrentPosition((position) => {
+                map.setView([position.coords.latitude, position.coords.longitude], 15);
+                L.marker([position.coords.latitude, position.coords.longitude])
+                    .addTo(map)
+                    .bindPopup('Votre position')
+                    .openPopup();
+                this.innerHTML = '<i class="fas fa-location-arrow"></i>';
+            }, (error) => {
+                alert('Impossible de déterminer votre position');
+                this.innerHTML = '<i class="fas fa-location-arrow"></i>';
+            });
+        }
+    });
+    
+    // Search functionality
+    document.getElementById('map-search').addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        
+        Object.values(parcelLayers).forEach(parcelData => {
+            const matches = parcelData.properties.parcel_id.toLowerCase().includes(query) ||
+                           (parcelData.properties.address && parcelData.properties.address.toLowerCase().includes(query));
+            
+            if (query === '' || matches) {
+                parcelData.layer.setStyle({ opacity: 1, fillOpacity: 0.7 });
+            } else {
+                parcelData.layer.setStyle({ opacity: 0.3, fillOpacity: 0.1 });
+            }
+        });
+    });
+    
+    // Initialize map when page loads
+    document.addEventListener('DOMContentLoaded', initMap);
+</script>
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<div class="p-6 pb-20 md:pb-6">
+    <div class="max-w-4xl mx-auto">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Mon Profil</h1>
+            <p class="text-gray-600">Gérez vos informations personnelles et paramètres de compte</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Profile Card -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                    <div class="w-20 h-20 bg-primary bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-user text-3xl text-primary"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ current_user.full_name }}</h3>
+                    <p class="text-gray-600 mb-4">{{ current_user.email }}</p>
+                    
+                    <div class="space-y-3 text-sm">
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-500">Membre depuis:</span>
+                            <span class="font-medium">{{ current_user.created_at.strftime('%m/%Y') }}</span>
+                        </div>
+                        
+                        {% if current_user.phone_number %}
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-500">Téléphone:</span>
+                                <span class="font-medium">{{ current_user.phone_number }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-500">Parcelles:</span>
+                            <span class="font-medium">{{ current_user.owned_parcels.count() }}</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-500">Documents:</span>
+                            <span class="font-medium">{{ current_user.documents.count() }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 pt-6 border-t border-gray-200">
+                        <a href="{{ url_for('auth.logout') }}" class="text-red-600 hover:text-red-700 font-medium">
+                            <i class="fas fa-sign-out-alt mr-2"></i>
+                            Se déconnecter
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Form -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow-md">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h2 class="text-xl font-semibold">Informations Personnelles</h2>
+                    </div>
+                    
+                    <form class="p-6 space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Nom complet</label>
+                                <input type="text" value="{{ current_user.full_name }}" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                                <input type="email" value="{{ current_user.email }}" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-gray-50" readonly>
+                                <p class="text-xs text-gray-500 mt-1">L'email ne peut pas être modifié</p>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Numéro de téléphone</label>
+                            <input type="tel" value="{{ current_user.phone_number or '' }}" 
+                                   placeholder="+229 XX XX XX XX"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                        
+                        <div class="pt-6 border-t border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Changer le mot de passe</h3>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Mot de passe actuel</label>
+                                    <input type="password" placeholder="Entrez votre mot de passe actuel"
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Nouveau mot de passe</label>
+                                        <input type="password" placeholder="Nouveau mot de passe"
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Confirmer le mot de passe</label>
+                                        <input type="password" placeholder="Confirmez le nouveau mot de passe"
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-4">
+                            <button type="button" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                                Annuler
+                            </button>
+                            <button type="submit" class="btn-primary text-white px-6 py-2 rounded-lg font-medium">
+                                Sauvegarder les modifications
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Account Settings -->
+                <div class="bg-white rounded-lg shadow-md mt-8">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h2 class="text-xl font-semibold">Paramètres du Compte</h2>
+                    </div>
+                    
+                    <div class="p-6 space-y-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900">Notifications Email</h3>
+                                <p class="text-sm text-gray-600">Recevoir des emails pour les mises à jour de documents</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" checked class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary peer-focus:ring-opacity-25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            </label>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900">Notifications SMS</h3>
+                                <p class="text-sm text-gray-600">Recevoir des SMS pour les alertes urgentes</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary peer-focus:ring-opacity-25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            </label>
+                        </div>
+                        
+                        <div class="pt-6 border-t border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900 text-red-600 mb-4">Zone de Danger</h3>
+                            
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                                <h4 class="font-medium text-red-900 mb-2">Supprimer le compte</h4>
+                                <p class="text-sm text-red-700 mb-4">
+                                    Une fois supprimé, votre compte ne peut pas être récupéré. Toutes vos données seront définitivement effacées.
+                                </p>
+                                <button class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
+                                    Supprimer mon compte
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Form submission
+    document.querySelector('form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        alert('Fonctionnalité de mise à jour du profil en cours de développement');
+    });
+    
+    // Account deletion
+    document.querySelector('.bg-red-600').addEventListener('click', function() {
+        if (confirm('Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.')) {
+            alert('Fonctionnalité de suppression de compte en cours de développement');
+        }
+    });
+</script>
+{% endblock %}

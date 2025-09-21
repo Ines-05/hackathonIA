@@ -1,0 +1,252 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<div class="p-6 pb-20 md:pb-6">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">
+            Bonjour, {{ current_user.full_name.split(' ')[0] }} !
+        </h1>
+        <p class="text-gray-600 mt-2">
+            Voici un aperçu de vos parcelles et documents récents.
+        </p>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-gradient-to-r from-primary to-green-600 p-6 rounded-lg text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-green-100 text-sm">Total Parcelles</p>
+                    <p class="text-3xl font-bold">{{ stats.total_parcels }}</p>
+                </div>
+                <i class="fas fa-map-marked-alt text-2xl text-green-200"></i>
+            </div>
+        </div>
+        
+        <div class="bg-gradient-to-r from-green-500 to-green-600 p-6 rounded-lg text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-green-100 text-sm">Vérifiées</p>
+                    <p class="text-3xl font-bold">{{ stats.verified_parcels }}</p>
+                </div>
+                <i class="fas fa-check-circle text-2xl text-green-200"></i>
+            </div>
+        </div>
+        
+        <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 p-6 rounded-lg text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-yellow-100 text-sm">En Attente</p>
+                    <p class="text-3xl font-bold">{{ stats.pending_parcels }}</p>
+                </div>
+                <i class="fas fa-clock text-2xl text-yellow-200"></i>
+            </div>
+        </div>
+        
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-lg text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-blue-100 text-sm">Documents</p>
+                    <p class="text-3xl font-bold">{{ stats.total_documents }}</p>
+                </div>
+                <i class="fas fa-file-alt text-2xl text-blue-200"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Actions Rapides</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <button class="flex items-center justify-center p-4 border-2 border-dashed border-primary rounded-lg hover:bg-primary hover:bg-opacity-5 transition-colors group">
+                <div class="text-center">
+                    <i class="fas fa-plus-circle text-2xl text-primary group-hover:text-green-600 mb-2"></i>
+                    <p class="text-primary group-hover:text-green-600 font-medium">Ajouter une Parcelle</p>
+                </div>
+            </button>
+            
+            <button class="flex items-center justify-center p-4 border-2 border-dashed border-secondary rounded-lg hover:bg-secondary hover:bg-opacity-5 transition-colors group">
+                <div class="text-center">
+                    <i class="fas fa-upload text-2xl text-yellow-600 group-hover:text-yellow-700 mb-2"></i>
+                    <p class="text-yellow-600 group-hover:text-yellow-700 font-medium">Uploader un Document</p>
+                </div>
+            </button>
+            
+            <a href="{{ url_for('main.map_view') }}" class="flex items-center justify-center p-4 border-2 border-dashed border-blue-500 rounded-lg hover:bg-blue-50 transition-colors group">
+                <div class="text-center">
+                    <i class="fas fa-map text-2xl text-blue-500 group-hover:text-blue-600 mb-2"></i>
+                    <p class="text-blue-500 group-hover:text-blue-600 font-medium">Voir la Carte</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Recent Notifications -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold text-gray-900">
+                    <i class="fas fa-bell mr-2 text-primary"></i>
+                    Notifications Récentes
+                </h2>
+                <span class="text-sm text-gray-500">Aujourd'hui</span>
+            </div>
+            
+            {% if notifications %}
+                <div class="space-y-4">
+                    {% for notification in notifications %}
+                        <div class="flex items-start p-3 {% if notification.type == 'success' %}bg-green-50 border-l-4 border-green-500{% elif notification.type == 'warning' %}bg-yellow-50 border-l-4 border-yellow-500{% else %}bg-blue-50 border-l-4 border-blue-500{% endif %} rounded">
+                            <div class="flex-shrink-0 mr-3">
+                                {% if notification.type == 'success' %}
+                                    <i class="fas fa-check-circle text-green-500"></i>
+                                {% elif notification.type == 'warning' %}
+                                    <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                                {% else %}
+                                    <i class="fas fa-info-circle text-blue-500"></i>
+                                {% endif %}
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-900">{{ notification.message }}</p>
+                                <p class="text-xs text-gray-500 mt-1">{{ notification.time.strftime('%H:%M') }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-bell-slash text-3xl mb-3"></i>
+                    <p>Aucune notification récente</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- My Parcels -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold text-gray-900">
+                    <i class="fas fa-map-marked-alt mr-2 text-primary"></i>
+                    Mes Parcelles
+                </h2>
+                <a href="{{ url_for('main.map_view') }}" class="text-primary hover:text-green-600 text-sm font-medium">
+                    Voir tout →
+                </a>
+            </div>
+            
+            {% if parcels %}
+                <div class="space-y-4">
+                    {% for parcel in parcels[:3] %}
+                        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="font-semibold text-gray-900">{{ parcel.parcel_id_unique }}</h3>
+                                <span class="px-2 py-1 text-xs rounded-full status-badge" style="background-color: {{ parcel.status_color }}20; color: {{ parcel.status_color }}">
+                                    {{ parcel.status }}
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-3">{{ parcel.address or 'Adresse non disponible' }}</p>
+                            <div class="flex items-center justify-between text-xs text-gray-500">
+                                <span>
+                                    <i class="fas fa-ruler-combined mr-1"></i>
+                                    {{ parcel.area_sqm or 'N/A' }} m²
+                                </span>
+                                <span>
+                                    <i class="fas fa-clock mr-1"></i>
+                                    {{ parcel.last_updated.strftime('%d/%m/%Y') }}
+                                </span>
+                            </div>
+                            <div class="mt-3 flex space-x-2">
+                                <a href="{{ url_for('main.parcel_detail', parcel_id=parcel.id) }}" class="text-primary hover:text-green-600 text-xs font-medium">
+                                    Voir détails
+                                </a>
+                                {% if parcel.status != 'Vérifié' %}
+                                    <button class="text-yellow-600 hover:text-yellow-700 text-xs font-medium">
+                                        Mettre à jour
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                {% if parcels|length > 3 %}
+                    <div class="mt-4 text-center">
+                        <a href="{{ url_for('main.map_view') }}" class="text-primary hover:text-green-600 text-sm font-medium">
+                            Voir {{ parcels|length - 3 }} parcelle(s) de plus →
+                        </a>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-map text-3xl mb-3"></i>
+                    <p class="mb-4">Aucune parcelle enregistrée</p>
+                    <button class="btn-primary text-white px-6 py-2 rounded-lg text-sm font-medium">
+                        <i class="fas fa-plus mr-2"></i>
+                        Ajouter ma première parcelle
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="mt-8 bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">
+            <i class="fas fa-history mr-2 text-primary"></i>
+            Activité Récente
+        </h2>
+        
+        <div class="space-y-4">
+            {% if parcels %}
+                {% for parcel in parcels[:2] %}
+                    {% if parcel.get_latest_transaction() %}
+                        <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                            <div class="w-10 h-10 bg-primary bg-opacity-10 rounded-full flex items-center justify-center mr-4">
+                                <i class="fas fa-exchange-alt text-primary"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900">
+                                    Transaction sur {{ parcel.parcel_id_unique }}
+                                </p>
+                                <p class="text-xs text-gray-500">
+                                    {{ parcel.get_latest_transaction().transaction_type }} - 
+                                    {{ parcel.get_latest_transaction().timestamp.strftime('%d/%m/%Y à %H:%M') }}
+                                </p>
+                            </div>
+                            <div class="text-xs text-gray-400">
+                                <i class="fas fa-shield-alt mr-1"></i>
+                                Blockchain
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            
+            <!-- Sample activity if no real activity -->
+            {% if not parcels %}
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-history text-3xl mb-3"></i>
+                    <p>Aucune activité récente</p>
+                    <p class="text-sm">Vos transactions apparaîtront ici</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Add interactivity to quick action buttons
+    document.querySelectorAll('button').forEach(button => {
+        button.addEventListener('click', function() {
+            if (this.textContent.includes('Ajouter une Parcelle')) {
+                // This would open a modal or redirect to add parcel page
+                alert('Fonctionnalité d\'ajout de parcelle en cours de développement');
+            } else if (this.textContent.includes('Uploader un Document')) {
+                // This would open a file upload modal
+                alert('Fonctionnalité d\'upload de document en cours de développement');
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,241 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div class="text-center">
+            <div class="flex justify-center">
+                <div class="w-20 h-20 bg-primary bg-opacity-10 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user-plus text-3xl text-primary"></i>
+                </div>
+            </div>
+            <h2 class="mt-6 text-3xl font-bold text-gray-900">
+                Créer un compte FoncierMap
+            </h2>
+            <p class="mt-2 text-sm text-gray-600">
+                Rejoignez des milliers de propriétaires qui nous font confiance
+            </p>
+        </div>
+        
+        <div class="bg-white py-8 px-6 shadow-lg rounded-lg">
+            <form method="POST" action="{{ url_for('auth.register') }}" class="space-y-6">
+                {{ form.hidden_tag() }}
+                
+                <!-- Full Name Field -->
+                <div>
+                    {{ form.full_name.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                    {{ form.full_name(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent") }}
+                    {% if form.full_name.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.full_name.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Email Field -->
+                <div>
+                    {{ form.email.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                    {{ form.email(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent") }}
+                    {% if form.email.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.email.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Phone Number Field -->
+                <div>
+                    {{ form.phone_number.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                    {{ form.phone_number(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent") }}
+                    {% if form.phone_number.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.phone_number.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">Optionnel - Pour les notifications importantes</p>
+                </div>
+                
+                <!-- Password Field -->
+                <div>
+                    {{ form.password.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                    <div class="relative">
+                        {{ form.password(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent", id="password-input") }}
+                        <button type="button" id="toggle-password" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-eye" id="password-icon"></i>
+                        </button>
+                    </div>
+                    {% if form.password.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.password.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Password Strength Indicator -->
+                    <div class="mt-2">
+                        <div class="flex space-x-1">
+                            <div id="strength-1" class="h-1 flex-1 bg-gray-200 rounded"></div>
+                            <div id="strength-2" class="h-1 flex-1 bg-gray-200 rounded"></div>
+                            <div id="strength-3" class="h-1 flex-1 bg-gray-200 rounded"></div>
+                            <div id="strength-4" class="h-1 flex-1 bg-gray-200 rounded"></div>
+                        </div>
+                        <p id="strength-text" class="text-xs text-gray-500 mt-1">Entrez un mot de passe</p>
+                    </div>
+                </div>
+                
+                <!-- Confirm Password Field -->
+                <div>
+                    {{ form.password2.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                    <div class="relative">
+                        {{ form.password2(class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent", id="password2-input") }}
+                        <button type="button" id="toggle-password2" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-eye" id="password2-icon"></i>
+                        </button>
+                    </div>
+                    {% if form.password2.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.password2.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Terms and Conditions -->
+                <div class="flex items-start">
+                    <input type="checkbox" id="terms" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded mt-1" required>
+                    <label for="terms" class="ml-2 block text-sm text-gray-700">
+                        J'accepte les 
+                        <a href="#" class="text-primary hover:text-green-600 underline">conditions d'utilisation</a>
+                        et la 
+                        <a href="#" class="text-primary hover:text-green-600 underline">politique de confidentialité</a>
+                    </label>
+                </div>
+                
+                <!-- Submit Button -->
+                <div>
+                    {{ form.submit(class="w-full btn-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors") }}
+                </div>
+            </form>
+            
+            <!-- Divider -->
+            <div class="mt-6">
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-white text-gray-500">Déjà un compte ?</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Login Link -->
+            <div class="mt-6 text-center">
+                <a href="{{ url_for('auth.login') }}" class="w-full inline-block border-2 border-primary text-primary py-3 px-4 rounded-lg font-medium hover:bg-primary hover:text-white transition-colors">
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    Se connecter
+                </a>
+            </div>
+        </div>
+        
+        <!-- Back to Home -->
+        <div class="text-center">
+            <a href="{{ url_for('main.index') }}" class="text-gray-600 hover:text-gray-900 text-sm">
+                <i class="fas fa-arrow-left mr-1"></i>
+                Retour à l'accueil
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Password visibility toggles
+    function setupPasswordToggle(toggleId, inputId, iconId) {
+        const toggle = document.getElementById(toggleId);
+        const input = document.getElementById(inputId);
+        const icon = document.getElementById(iconId);
+        
+        toggle.addEventListener('click', function() {
+            const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+            input.setAttribute('type', type);
+            
+            if (type === 'text') {
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    }
+    
+    setupPasswordToggle('toggle-password', 'password-input', 'password-icon');
+    setupPasswordToggle('toggle-password2', 'password2-input', 'password2-icon');
+    
+    // Password strength checker
+    const passwordInput = document.getElementById('password-input');
+    const strengthText = document.getElementById('strength-text');
+    const strengthBars = [
+        document.getElementById('strength-1'),
+        document.getElementById('strength-2'),
+        document.getElementById('strength-3'),
+        document.getElementById('strength-4')
+    ];
+    
+    function checkPasswordStrength(password) {
+        let strength = 0;
+        let feedback = '';
+        
+        if (password.length >= 6) strength++;
+        if (password.match(/[a-z]/)) strength++;
+        if (password.match(/[A-Z]/)) strength++;
+        if (password.match(/[0-9]/) || password.match(/[^a-zA-Z0-9]/)) strength++;
+        
+        // Reset all bars
+        strengthBars.forEach(bar => {
+            bar.classList.remove('bg-red-500', 'bg-yellow-500', 'bg-green-500');
+            bar.classList.add('bg-gray-200');
+        });
+        
+        // Set bar colors based on strength
+        for (let i = 0; i < strength; i++) {
+            strengthBars[i].classList.remove('bg-gray-200');
+            if (strength <= 1) {
+                strengthBars[i].classList.add('bg-red-500');
+                feedback = 'Mot de passe faible';
+            } else if (strength <= 2) {
+                strengthBars[i].classList.add('bg-yellow-500');
+                feedback = 'Mot de passe moyen';
+            } else {
+                strengthBars[i].classList.add('bg-green-500');
+                feedback = strength === 4 ? 'Mot de passe fort' : 'Mot de passe correct';
+            }
+        }
+        
+        if (password.length === 0) {
+            feedback = 'Entrez un mot de passe';
+        }
+        
+        strengthText.textContent = feedback;
+        strengthText.className = `text-xs mt-1 ${
+            strength <= 1 ? 'text-red-600' : 
+            strength <= 2 ? 'text-yellow-600' : 
+            'text-green-600'
+        }`;
+    }
+    
+    passwordInput.addEventListener('input', function() {
+        checkPasswordStrength(this.value);
+    });
+</script>
+{% endblock %}
