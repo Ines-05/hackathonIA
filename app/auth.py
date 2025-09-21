@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash
+from urllib.parse import urlparse
 from app import db, login_manager
 from app.models import User
 from app.forms import LoginForm, RegisterForm
@@ -23,8 +24,11 @@ def login():
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
             next_page = request.args.get('next')
+            # Validate next parameter for security (prevent open redirects)
+            if not next_page or urlparse(next_page).netloc != '' or not next_page.startswith('/'):
+                next_page = url_for('main.dashboard')
             flash('Connexion réussie !', 'success')
-            return redirect(next_page) if next_page else redirect(url_for('main.dashboard'))
+            return redirect(next_page)
         else:
             flash('Email ou mot de passe incorrect.', 'error')
     
