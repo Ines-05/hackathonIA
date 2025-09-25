@@ -17,6 +17,7 @@ export default function LandingPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-3">
               <Image src="/logo-andf.png" alt="ANDF Logo" width={120} height={40} className="h-8 sm:h-10 w-auto" />
+              <Image src="/logo_Ayigba-removebg-preview.png" alt="AIYGBA Logo" width={150} height={50} className="h-10 sm:h-12 w-auto" />
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
               <div className="hidden sm:flex items-center space-x-4">
@@ -58,7 +59,7 @@ export default function LandingPage() {
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 text-balance leading-tight animate-fade-in-up drop-shadow-lg">
             Bienvenue sur la plateforme foncière
-            <span className="text-green-300 block">inclusive</span>
+            <span className="text-green-300 block">AIYGBA</span>
           </h1>
 
           <p

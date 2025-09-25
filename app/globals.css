@@ -1,10 +1,12 @@
 @import "tailwindcss";
-@import "tw-animate-css";
+/* Removed invalid import - verify correct animation library name */
+/* @import "tw-animate-css"; */
 
-@custom-variant dark (&:is(.dark *));
+/* Removed non-standard custom variant - should be in tailwind.config.js */
+/* @custom-variant dark (&:is(.dark *)); */
 
 :root {
-  /* Switching to light theme by default with ANDF colors */
+  /* Light theme with ANDF colors */
   --background: #ffffff;
   --foreground: #1a1a1a;
   --card: #ffffff;
@@ -13,6 +15,7 @@
   --popover-foreground: #1a1a1a;
   --primary: #2e7d32;
   --primary-foreground: #ffffff;
+  --primary-dark: #1b5e20; /* Added missing variable */
   --secondary: #f5f5f5;
   --secondary-foreground: #1a1a1a;
   --muted: #f8f9fa;
@@ -49,6 +52,7 @@
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.985 0 0);
   --primary-foreground: oklch(0.205 0 0);
+  --primary-dark: oklch(0.8 0 0); /* Added for dark theme */
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -75,70 +79,20 @@
   --sidebar-ring: oklch(0.439 0 0);
 }
 
-@theme inline {
+/* If using Tailwind CSS v4, verify this syntax - otherwise remove */
+/* @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
-}
-
-/* Dark mode support */
-/* Removed dark mode auto-switching */
+  ... (rest of theme variables)
+} */
 
 /* Enhanced Custom Animations */
 @keyframes float {
-  0%,
-  100% {
+  0%, 100% {
     transform: translateY(0px) rotate(0deg);
   }
   50% {
     transform: translateY(-15px) rotate(2deg);
-  }
-}
-
-/* Hero section background optimization */
-.hero-terrain-bg {
-  background-attachment: fixed;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-@media (max-width: 768px) {
-  .hero-terrain-bg {
-    background-attachment: scroll; /* Better mobile performance */
   }
 }
 
@@ -175,9 +129,9 @@
   }
 }
 
-@keyframes pulse-green {
-  0%,
-  100% {
+/* Renamed to avoid conflict with second definition */
+@keyframes pulse-green-basic {
+  0%, 100% {
     box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.7);
   }
   70% {
@@ -186,8 +140,7 @@
 }
 
 @keyframes bounce-gentle {
-  0%,
-  100% {
+  0%, 100% {
     transform: translateY(0);
   }
   50% {
@@ -215,22 +168,17 @@
   }
 }
 
-/* Added chatbot blinking animation */
 @keyframes blink {
-  0%,
-  50% {
+  0%, 50% {
     opacity: 1;
   }
-  51%,
-  100% {
+  51%, 100% {
     opacity: 0.3;
   }
 }
 
-/* Added drag and drop animation */
 @keyframes dragDrop {
-  0%,
-  100% {
+  0%, 100% {
     transform: translateY(0) rotate(0deg);
   }
   25% {
@@ -244,19 +192,17 @@
   }
 }
 
-/* Hand clicking animation */
 @keyframes clickHand {
   0%, 100% {
-    transform: scale(1);
-    opacity: 1;
+    transform: scale(1) rotate(-10deg);
+    opacity: 0.9;
   }
   50% {
-    transform: scale(1.2);
-    opacity: 0.8;
+    transform: scale(0.9) rotate(-15deg);
+    opacity: 1;
   }
 }
 
-/* Click indicator animation - appears ON button */
 @keyframes clickIndicator {
   0%, 40% {
     transform: translateX(-50%) translateY(-50%) scale(1);
@@ -272,19 +218,52 @@
   }
 }
 
-/* Enhanced hand clicking animation */
-@keyframes clickHand {
+@keyframes pulseGrow {
   0%, 100% {
-    transform: scale(1) rotate(-10deg);
-    opacity: 0.9;
+    transform: scale(1);
+    opacity: 1;
   }
   50% {
-    transform: scale(0.9) rotate(-15deg);
-    opacity: 1;
+    transform: scale(1.1);
+    opacity: 0.8;
   }
 }
 
-/* Soft blink animation - more visible */
+@keyframes slideInScale {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes errorShake {
+  0%, 100% { 
+    transform: translateX(0); 
+  }
+  10%, 30%, 50%, 70%, 90% { 
+    transform: translateX(-3px); 
+  }
+  20%, 40%, 60%, 80% { 
+    transform: translateX(3px); 
+  }
+}
+
+@keyframes successBounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-8px);
+  }
+  60% {
+    transform: translateY(-4px);
+  }
+}
+
 @keyframes blinkSoft {
   0%, 60% {
     box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
@@ -296,7 +275,6 @@
   }
 }
 
-/* Pulse green enhanced - more visible for video button */
 @keyframes pulseGreenEnhanced {
   0% {
     transform: scale(1);
@@ -312,7 +290,6 @@
   }
 }
 
-/* Added progress bar animation for file upload */
 @keyframes progress {
   0% {
     width: 0%;
@@ -326,37 +303,49 @@
 .animate-blink {
   animation: blink 2s infinite;
 }
+
 .animate-float {
   animation: float 4s ease-in-out infinite;
 }
+
 .animate-fade-in-up {
   animation: fadeInUp 0.8s ease-out;
 }
+
 .animate-slide-in-right {
   animation: slideInRight 0.8s ease-out;
 }
+
 .animate-slide-in-left {
   animation: slideInLeft 0.8s ease-out;
 }
+
 .animate-pulse-green {
-  animation: pulse-green 2.5s infinite;
+  animation: pulseGreenEnhanced 2s ease-in-out infinite;
 }
+
+.animate-pulse-green-basic {
+  animation: pulse-green-basic 2.5s infinite;
+}
+
 .animate-bounce-gentle {
   animation: bounce-gentle 2s ease-in-out infinite;
 }
+
 .animate-scale-in {
   animation: scale-in 0.6s ease-out;
 }
+
 .animate-shimmer {
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200px 100%;
   animation: shimmer 2s infinite;
 }
+
 .animate-drag-drop {
   animation: dragDrop 3s ease-in-out infinite;
 }
 
-/* New animation classes */
 .animate-click-hand {
   animation: clickHand 1.5s ease-in-out infinite;
 }
@@ -369,13 +358,38 @@
   animation: blinkSoft 2s ease-in-out infinite;
 }
 
-.animate-pulse-green {
-  animation: pulseGreenEnhanced 2s ease-in-out infinite;
+.animate-pulse-grow {
+  animation: pulseGrow 2s ease-in-out infinite;
 }
 
-/* Added progress animation class */
+.animate-slide-in-scale {
+  animation: slideInScale 0.6s ease-out;
+}
+
+.animate-error-shake {
+  animation: errorShake 0.5s ease-in-out;
+}
+
+.animate-success-bounce {
+  animation: successBounce 1s ease-out;
+}
+
 .animate-progress {
   animation: progress 2s ease-in-out;
+}
+
+/* Hero section background optimization */
+.hero-terrain-bg {
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+@media (max-width: 768px) {
+  .hero-terrain-bg {
+    background-attachment: scroll;
+  }
 }
 
 /* Interactive Hover Effects */
@@ -406,19 +420,83 @@
 
 /* Mobile-First Responsive Utilities */
 .mobile-padding {
-  @apply px-4 sm:px-6 lg:px-8;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .mobile-padding {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-padding {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
 }
 
 .mobile-text {
-  @apply text-sm sm:text-base lg:text-lg;
+  font-size: 0.875rem;
+}
+
+@media (min-width: 640px) {
+  .mobile-text {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-text {
+    font-size: 1.125rem;
+  }
 }
 
 .mobile-heading {
-  @apply text-2xl sm:text-3xl lg:text-4xl xl:text-5xl;
+  font-size: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .mobile-heading {
+    font-size: 1.875rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-heading {
+    font-size: 2.25rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .mobile-heading {
+    font-size: 3rem;
+  }
 }
 
 .mobile-grid {
-  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+@media (min-width: 640px) {
+  .mobile-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .mobile-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 /* Smooth scrolling and performance */
@@ -448,12 +526,18 @@ html {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--primary-dark);
+  background: var(--primary-dark); /* Now properly defined */
 }
 
 /* Focus states for accessibility */
 .focus-ring {
-  @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.focus-ring:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 /* Loading states */
@@ -468,7 +552,7 @@ html {
   position: relative;
   overflow: hidden;
   transition: all 0.3s ease;
-  transform: translateZ(0); /* Force GPU acceleration */
+  transform: translateZ(0);
 }
 
 .btn-animate::before {
@@ -490,7 +574,6 @@ html {
   transform: translateY(-2px) translateZ(0);
 }
 
-/* Enhanced button focus states for accessibility */
 .btn-animate:focus {
   outline: 2px solid rgba(34, 197, 94, 0.5);
   outline-offset: 2px;
@@ -514,16 +597,12 @@ html {
     overscroll-behavior: contain;
   }
 
-  /* Larger touch targets on mobile */
   .touch-target {
     min-height: 44px;
     min-width: 44px;
   }
 
-  /* Prevent zoom on input focus */
-  input,
-  select,
-  textarea {
+  input, select, textarea {
     font-size: 16px;
   }
 }
@@ -538,23 +617,24 @@ html {
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
+/* Base layer styles */
+* {
+  border-color: var(--border);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "rlig" 1, "calt" 1;
 }
 
 /* Print styles */

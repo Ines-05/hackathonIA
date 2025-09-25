@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import Chatbot from "@/components/chatbot"
 import {
   ArrowLeft,
@@ -15,13 +16,18 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCcw,
+  ChevronDown,
+  ChevronRight,
+  Upload,
 } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 export default function ResultsPage() {
   const [mapLoaded, setMapLoaded] = useState(false)
   const [zoomLevel, setZoomLevel] = useState(15)
   const [parcelStatus] = useState<"available" | "disputed" | "titled">("available") // Mock status
+  const [legendOpen, setLegendOpen] = useState(false)
 
   useEffect(() => {
     // Simulate map loading
@@ -96,18 +102,12 @@ export default function ResultsPage() {
             <Link href="/upload" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
               <ArrowLeft className="w-5 h-5" />
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">A</span>
-                </div>
-                <span className="font-semibold">ANDF Platform</span>
+                <Image src="/logo_Ayigba-removebg-preview.png" alt="AIYGBA Logo" width={40} height={40} className="w-10 h-10" />
+                <span className="font-semibold">AIYGBA Platform</span>
               </div>
             </Link>
             <div className="flex items-center space-x-4">
               <div className="text-sm text-muted-foreground">Étape 3 sur 3</div>
-              <Button onClick={downloadReport} className="bg-primary hover:bg-primary-dark">
-                <Download className="w-4 h-4 mr-2" />
-                Télécharger PDF
-              </Button>
             </div>
           </div>
         </div>
@@ -137,7 +137,8 @@ export default function ResultsPage() {
                 ) : (
                   <>
                     {/* Mock Map Interface */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-blue-50">
+                    <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-blue-50" 
+                         style={{ transform: `scale(${1 + (zoomLevel - 15) * 0.1})`, transformOrigin: 'center center' }}>
                       {/* Grid pattern to simulate map */}
                       <div className="absolute inset-0 opacity-20">
                         <div className="grid grid-cols-8 grid-rows-8 h-full">
@@ -147,22 +148,55 @@ export default function ResultsPage() {
                         </div>
                       </div>
 
-                      {/* Highlighted Parcel */}
+                      {/* Highlighted Parcel - Size changes with zoom */}
                       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                        <div className="w-32 h-24 bg-primary/30 border-4 border-primary rounded-lg animate-pulse-green relative">
+                        <div 
+                          className="bg-[#2e7d32]/30 border-4 border-[#2e7d32] rounded-lg animate-pulse-green relative transition-all duration-300"
+                          style={{ 
+                            width: `${8 + (zoomLevel - 10) * 2}rem`, 
+                            height: `${6 + (zoomLevel - 10) * 1.5}rem` 
+                          }}
+                        >
                           <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
-                            <div className="bg-primary text-white px-3 py-1 rounded-full text-sm font-medium">
+                            <div className="bg-[#2e7d32] text-white px-3 py-1 rounded-full text-sm font-medium">
                               Votre parcelle
                             </div>
                           </div>
-                          <MapPin className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-primary" />
+                          <MapPin 
+                            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[#2e7d32] transition-all duration-300" 
+                            style={{ width: `${1.5 + (zoomLevel - 15) * 0.1}rem`, height: `${1.5 + (zoomLevel - 15) * 0.1}rem` }}
+                          />
                         </div>
                       </div>
 
-                      {/* Mock surrounding parcels */}
-                      <div className="absolute top-1/4 left-1/4 w-20 h-16 bg-gray-200 border-2 border-gray-400 rounded opacity-60" />
-                      <div className="absolute top-3/4 right-1/4 w-24 h-20 bg-gray-200 border-2 border-gray-400 rounded opacity-60" />
-                      <div className="absolute bottom-1/4 left-1/3 w-16 h-12 bg-gray-200 border-2 border-gray-400 rounded opacity-60" />
+                      {/* Mock surrounding parcels - Size and position change with zoom */}
+                      <div 
+                        className="absolute bg-gray-200 border-2 border-gray-400 rounded opacity-60 transition-all duration-300"
+                        style={{ 
+                          top: '25%', 
+                          left: '25%',
+                          width: `${5 + (zoomLevel - 15) * 0.5}rem`, 
+                          height: `${4 + (zoomLevel - 15) * 0.4}rem` 
+                        }}
+                      />
+                      <div 
+                        className="absolute bg-gray-200 border-2 border-gray-400 rounded opacity-60 transition-all duration-300"
+                        style={{ 
+                          top: '75%', 
+                          right: '25%',
+                          width: `${6 + (zoomLevel - 15) * 0.6}rem`, 
+                          height: `${5 + (zoomLevel - 15) * 0.5}rem` 
+                        }}
+                      />
+                      <div 
+                        className="absolute bg-gray-200 border-2 border-gray-400 rounded opacity-60 transition-all duration-300"
+                        style={{ 
+                          bottom: '25%', 
+                          left: '33%',
+                          width: `${4 + (zoomLevel - 15) * 0.4}rem`, 
+                          height: `${3 + (zoomLevel - 15) * 0.3}rem` 
+                        }}
+                      />
                     </div>
 
                     {/* Map Controls */}
@@ -191,9 +225,49 @@ export default function ResultsPage() {
                 )}
               </div>
             </Card>
+
+            {/* Legend (Collapsible under map) */}
+            <div className="mt-4">
+              <Collapsible open={legendOpen} onOpenChange={setLegendOpen}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between bg-white/80 backdrop-blur-sm">
+                    <span className="flex items-center space-x-2">
+                      <span>Légende de la carte</span>
+                    </span>
+                    {legendOpen ? (
+                      <ChevronDown className="h-4 w-4 transition-transform" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 transition-transform" />
+                    )}
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <Card className="p-4 mt-2 bg-white/80 backdrop-blur-sm">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-4 h-4 bg-green-500 rounded" />
+                        <span className="text-sm">Parcelle disponible</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-4 h-4 bg-orange-500 rounded" />
+                        <span className="text-sm">Parcelle en litige</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-4 h-4 bg-red-500 rounded" />
+                        <span className="text-sm">Parcelle titrée</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-4 h-4 bg-gray-400 rounded" />
+                        <span className="text-sm">Autres parcelles</span>
+                      </div>
+                    </div>
+                  </Card>
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
           </div>
 
-          {/* Info Panel */}
+          {/* Right Side Panel */}
           <div className="space-y-6">
             {/* Status Card */}
             <Card className="p-6">
@@ -235,73 +309,95 @@ export default function ResultsPage() {
               )}
             </Card>
 
-            {/* Parcel Details */}
+            {/* Actions Section - Moved under status */}
             <Card className="p-6">
-              <h3 className="font-semibold text-lg mb-4">Détails de la parcelle</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Superficie</span>
-                  <span className="font-medium">2,450 m²</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Commune</span>
-                  <span className="font-medium">Cotonou</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Arrondissement</span>
-                  <span className="font-medium">1er Arrondissement</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Zone</span>
-                  <span className="font-medium">Résidentielle</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Référence</span>
-                  <span className="font-medium">CTN-001-2025</span>
-                </div>
-              </div>
-            </Card>
-
-            {/* Actions */}
-            <Card className="p-6">
-              <h3 className="font-semibold text-lg mb-4">Actions disponibles</h3>
-              <div className="space-y-3">
-                <Button onClick={downloadReport} className="w-full bg-primary hover:bg-primary-dark">
-                  <Download className="w-4 h-4 mr-2" />
+              <h3 className="font-semibold text-lg mb-6 flex items-center">
+                <Download className="w-5 h-5 mr-2 text-[#2e7d32]" />
+                Actions à faire
+              </h3>
+              <div className="space-y-4">
+                <Button 
+                  onClick={downloadReport} 
+                  size="lg"
+                  className="w-full bg-[#2e7d32] hover:bg-[#1b5e20] text-white font-semibold py-4 px-6 text-lg rounded-lg btn-animate hover-glow shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  <Download className="w-5 h-5 mr-3" />
                   Télécharger le rapport PDF
                 </Button>
-                <Button variant="outline" className="w-full bg-transparent">
-                  Contacter un expert
-                </Button>
-                <Button variant="outline" className="w-full bg-transparent">
-                  Demander une vérification
-                </Button>
-              </div>
-            </Card>
-
-            {/* Legend */}
-            <Card className="p-6">
-              <h3 className="font-semibold text-lg mb-4">Légende</h3>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-green-500 rounded" />
-                  <span className="text-sm">Parcelle disponible</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-orange-500 rounded" />
-                  <span className="text-sm">Parcelle en litige</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-red-500 rounded" />
-                  <span className="text-sm">Parcelle titrée</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-gray-400 rounded" />
-                  <span className="text-sm">Autres parcelles</span>
-                </div>
+                <Link href="/upload" className="w-full block">
+                  <Button 
+                    size="lg"
+                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-4 px-6 text-lg rounded-lg btn-animate shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    <Upload className="w-5 h-5 mr-3" />
+                    Nouvelle vérification
+                  </Button>
+                </Link>
               </div>
             </Card>
           </div>
+        </div>
+
+        {/* Details Section - Moved to bottom after everything */}
+        <div className="mt-12">
+          <Card className="p-6">
+            <h3 className="font-semibold text-lg mb-6">Détails complets de la parcelle</h3>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="space-y-4">
+                <h4 className="font-medium text-[#2e7d32]">Informations générales</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Superficie</span>
+                    <span className="font-medium">2,450 m²</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Périmètre</span>
+                    <span className="font-medium">198.2 m</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Référence</span>
+                    <span className="font-medium">CTN-001-2025</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="font-medium text-[#2e7d32]">Localisation</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Commune</span>
+                    <span className="font-medium">Cotonou</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Arrondissement</span>
+                    <span className="font-medium">1er Arrondissement</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Quartier</span>
+                    <span className="font-medium">Haie-Vive</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="font-medium text-[#2e7d32]">Classification</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Zone</span>
+                    <span className="font-medium">Résidentielle</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Usage autorisé</span>
+                    <span className="font-medium">Habitation</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Date d'analyse</span>
+                    <span className="font-medium">25/09/2025</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
         </div>
       </div>
 

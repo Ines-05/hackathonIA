@@ -116,7 +116,10 @@ export default function UploadPage() {
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
               <ArrowLeft className="w-5 h-5" />
-              <Image src="/logo-andf.png" alt="ANDF Logo" width={120} height={40} className="h-8 w-auto" />
+              <div className="flex items-center space-x-2">
+                <Image src="/logo-andf.png" alt="ANDF Logo" width={120} height={40} className="h-8 w-auto" />
+                <Image src="/logo_Ayigba-removebg-preview.png" alt="AIYGBA Logo" width={150} height={50} className="h-10 w-auto" />
+              </div>
             </Link>
             <div className="text-sm text-gray-600">Étape 1 sur 3</div>
           </div>
@@ -255,18 +258,21 @@ export default function UploadPage() {
                 </li>
               </ul>
             </Card>
-
-            <Card className="p-6 bg-green-50 border-green-200">
-              <h3 className="text-lg font-semibold mb-4 flex items-center">
-                <span className="text-2xl mr-2">🔒</span>
-                Sécurité et confidentialité
-              </h3>
-              <p className="text-sm text-gray-600">
-                Vos documents sont traités de manière sécurisée et ne sont pas stockés sur nos serveurs après analyse.
-                Toutes les données sont chiffrées et protégées selon les standards de sécurité les plus élevés.
-              </p>
-            </Card>
           </div>
+        </div>
+
+        {/* Security Section - Moved to Bottom */}
+        <div className="mt-12">
+          <Card className="p-6 bg-green-50 border-green-200 max-w-2xl mx-auto">
+            <h3 className="text-lg font-semibold mb-4 flex items-center justify-center">
+              <span className="text-2xl mr-2">🔒</span>
+              Sécurité et confidentialité
+            </h3>
+            <p className="text-sm text-gray-600 text-center">
+              Vos documents sont traités de manière sécurisée et ne sont pas stockés sur nos serveurs après analyse.
+              Toutes les données sont chiffrées et protégées selon les standards de sécurité les plus élevés.
+            </p>
+          </Card>
         </div>
       </div>
 
