@@ -649,3 +649,22 @@ body {
     box-shadow: none !important;
   }
 }
+
+/* Custom animations for analysis page */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes reverse-spin {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-reverse {
+  animation: reverse-spin 1.5s linear infinite;
+}

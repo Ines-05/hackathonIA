@@ -39,7 +39,7 @@ export default function Chatbot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      text: "Bonjour ! Je suis votre assistant AIYGBA. Comment puis-je vous aider aujourd'hui ?",
+      text: "Bonjour ! Je suis votre assistant AYIGBA. Comment puis-je vous aider aujourd'hui ?",
       isUser: false,
       timestamp: new Date(),
     },
@@ -309,10 +309,10 @@ export default function Chatbot() {
           <div className="flex items-center justify-between p-4 border-b bg-[#2e7d32] text-white">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden bg-white/10">
-                <img src="/logo_Ayigba-removebg-preview.png" alt="AIYGBA" className="w-full h-full object-contain" />
+                <img src="/logo_Ayigba-removebg-preview.png" alt="AYIGBA" className="w-full h-full object-contain" />
               </div>
               <div>
-                <h3 className="font-semibold">Assistant AIYGBA</h3>
+                <h3 className="font-semibold">Assistant AYIGBA</h3>
                 <p className="text-sm opacity-90">En ligne</p>
               </div>
             </div>
@@ -397,7 +397,7 @@ export default function Chatbot() {
                       <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                       <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                     </div>
-                    <span className="text-sm text-gray-500 ml-2">Assistant AIYGBA écrit...</span>
+                    <span className="text-sm text-gray-500 ml-2">Assistant AYIGBA écrit...</span>
                   </div>
                 </div>
               </div>

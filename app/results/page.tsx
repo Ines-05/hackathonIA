@@ -102,8 +102,7 @@ export default function ResultsPage() {
             <Link href="/upload" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
               <ArrowLeft className="w-5 h-5" />
               <div className="flex items-center space-x-2">
-                <Image src="/logo_Ayigba-removebg-preview.png" alt="AIYGBA Logo" width={40} height={40} className="w-10 h-10" />
-                <span className="font-semibold">AIYGBA Platform</span>
+                <Image src="/logo_Ayigba-removebg-preview.png" alt="AYIGBA Logo" width={40} height={40} className="w-10 h-10" />
               </div>
             </Link>
             <div className="flex items-center space-x-4">
@@ -243,22 +242,50 @@ export default function ResultsPage() {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <Card className="p-4 mt-2 bg-white/80 backdrop-blur-sm">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 gap-3">
                       <div className="flex items-center space-x-3">
-                        <div className="w-4 h-4 bg-green-500 rounded" />
-                        <span className="text-sm">Parcelle disponible</span>
+                        <div className="w-4 h-4 bg-blue-500 rounded" />
+                        <span className="text-sm">AIF (Association d'Intérêts Foncier)</span>
                       </div>
                       <div className="flex items-center space-x-3">
-                        <div className="w-4 h-4 bg-orange-500 rounded" />
-                        <span className="text-sm">Parcelle en litige</span>
+                        <div className="w-4 h-4 bg-green-600 rounded" />
+                        <span className="text-sm">Aires protégées</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-4 h-4 bg-cyan-500 rounded" />
+                        <span className="text-sm">DPL (Domaine Public Lagunaire)</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-4 h-4 bg-teal-500 rounded" />
+                        <span className="text-sm">DPM (Domaine Public Maritime)</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-4 h-4 bg-orange-400 rounded" />
+                        <span className="text-sm">Titres Fonciers démembrés (TF démembrés)</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-4 h-4 bg-purple-500 rounded" />
+                        <span className="text-sm">Titres Fonciers reconstitués (TF reconstitués)</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-4 h-4 bg-yellow-500 rounded" />
+                        <span className="text-sm">TF en cours (Titre foncier en cours)</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-4 h-4 bg-indigo-500 rounded" />
+                        <span className="text-sm">Parcelles objets d'enregistrement individuel</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-4 h-4 bg-gray-700 rounded" />
+                        <span className="text-sm">Titres Fonciers de l'État (TF_État)</span>
                       </div>
                       <div className="flex items-center space-x-3">
                         <div className="w-4 h-4 bg-red-500 rounded" />
-                        <span className="text-sm">Parcelle titrée</span>
+                        <span className="text-sm">Zones litigieuses</span>
                       </div>
                       <div className="flex items-center space-x-3">
-                        <div className="w-4 h-4 bg-gray-400 rounded" />
-                        <span className="text-sm">Autres parcelles</span>
+                        <div className="w-4 h-4 bg-red-300 rounded border-2 border-red-500" />
+                        <span className="text-sm">Zone de restrictions</span>
                       </div>
                     </div>
                   </Card>

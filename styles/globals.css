@@ -123,3 +123,23 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Animation de balancement pour la mascotte */
+@keyframes sway {
+  0%, 100% {
+    transform: rotate(-5deg);
+  }
+  50% {
+    transform: rotate(5deg);
+  }
+}
+
+.mascot-sway {
+  animation: sway 3s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+.mascot-sway-fast {
+  animation: sway 1.5s ease-in-out infinite;
+  transform-origin: center bottom;
+}
