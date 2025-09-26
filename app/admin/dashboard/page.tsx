@@ -68,75 +68,78 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="container mx-auto p-4 md:p-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Tableau de Bord Administrateur</h1>
-        <Button variant="outline" onClick={handleLogout}>
-          Déconnexion
-        </Button>
-      </div>
+    <div className="min-h-screen bg-gray-900 text-white">
+      <div className="container mx-auto p-4 md:p-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-white">Tableau de Bord Administrateur</h1>
+          <Button variant="outline" onClick={handleLogout} className="border-gray-600 text-white hover:bg-gray-800">
+            Déconnexion
+          </Button>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Historique des Demandes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[250px]">Fichier</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Date de Traitement</TableHead>
-                <TableHead className="text-right">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center">
-                    Chargement...
-                  </TableCell>
+        <Card className="bg-gray-800 border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-white">Historique des Demandes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow className="border-gray-700">
+                  <TableHead className="w-[250px] text-gray-300">Fichier</TableHead>
+                  <TableHead className="text-gray-300">Statut</TableHead>
+                  <TableHead className="text-gray-300">Date de Traitement</TableHead>
+                  <TableHead className="text-right text-gray-300">Action</TableHead>
                 </TableRow>
-              ) : requests.length > 0 ? (
-                requests.map((req) => (
-                  <TableRow key={req.id}>
-                    <TableCell className="font-medium">
-                      {req.filename}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          req.status === "Traitée" ? "default" : "destructive"
-                        }
-                      >
-                        {req.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(req.timestamp), "dd MMMM yyyy HH:mm", {
-                        locale: fr,
-                      })}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button asChild variant="link">
-                        <Link href={`/admin/requests/${req.id}`}>
-                          Voir les détails
-                        </Link>
-                      </Button>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow className="border-gray-700">
+                    <TableCell colSpan={4} className="text-center text-white">
+                      Chargement...
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center">
-                    Aucune demande trouvée.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                ) : requests.length > 0 ? (
+                  requests.map((req) => (
+                    <TableRow key={req.id} className="border-gray-700 hover:bg-gray-700">
+                      <TableCell className="font-medium text-white">
+                        {req.filename}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            req.status === "Traitée" ? "default" : "destructive"
+                          }
+                          className={req.status === "Traitée" ? "bg-green-600 hover:bg-green-700" : ""}
+                        >
+                          {req.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-gray-300">
+                        {format(new Date(req.timestamp), "dd MMMM yyyy HH:mm", {
+                          locale: fr,
+                        })}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button asChild variant="link" className="text-blue-400 hover:text-blue-300">
+                          <Link href={`/admin/requests/${req.id}`}>
+                            Voir les détails
+                          </Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow className="border-gray-700">
+                    <TableCell colSpan={4} className="text-center text-white">
+                      Aucune demande trouvée.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

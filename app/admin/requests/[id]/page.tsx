@@ -11,11 +11,11 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 // Import dynamique de la carte pour éviter les erreurs SSR
-const MapDisplay = dynamic(() => import("@/app/components/MapDisplayAdmin"), {
+const MapDisplay = dynamic(() => import("@/components/MapDisplayAdmin"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full items-center justify-center bg-gray-200">
-      <Loader2 className="h-8 w-8 animate-spin" />
+    <div className="flex h-full items-center justify-center bg-gray-700">
+      <Loader2 className="h-8 w-8 animate-spin text-white" />
     </div>
   ),
 });
@@ -83,7 +83,7 @@ export default function RequestDetailPage({
               .toString(16)
               .padStart(6, "0");
 
-          const layersWithColors = data.map((layer) => ({
+          const layersWithColors = data.map((layer: any) => ({
             ...layer,
             color: getRandomColor(),
           }));
@@ -268,83 +268,85 @@ export default function RequestDetailPage({
 
   if (!details)
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-screen items-center justify-center bg-gray-900 text-white">
         Chargement des détails de la demande...
       </div>
     );
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4 h-screen max-h-screen overflow-hidden">
-      <div className="lg:col-span-1 flex flex-col gap-4 overflow-y-auto">
-        <Card>
-          <CardHeader>
-            <CardTitle>Couches de Données</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {layers.map((layer) => (
-              <div key={layer.key} className="flex items-center space-x-2">
-                <Switch
-                  id={layer.key}
-                  onCheckedChange={(checked) =>
-                    handleLayerToggle(layer, checked)
-                  }
-                />
-                <Label htmlFor={layer.key} style={{ color: layer.color }}>
-                  {layer.name}
-                </Label>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+    <div className="min-h-screen bg-gray-900 text-white">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4 h-screen max-h-screen overflow-hidden">
+        <div className="lg:col-span-1 flex flex-col gap-4 overflow-y-auto">
+          <Card className="bg-gray-800 border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-white">Couches de Données</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {layers.map((layer) => (
+                <div key={layer.key} className="flex items-center space-x-2">
+                  <Switch
+                    id={layer.key}
+                    onCheckedChange={(checked) =>
+                      handleLayerToggle(layer, checked)
+                    }
+                  />
+                  <Label 
+                    htmlFor={layer.key} 
+                    style={{ color: layer.color }}
+                    className="text-white"
+                  >
+                    {layer.name}
+                  </Label>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Analyse de Superposition</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {details.overlaps.length === 0 ? (
-              <p className="text-green-600">
-                ✅ Aucune superposition à risque détectée.
-              </p>
+          <Card className="bg-gray-800 border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-white">Analyse de Superposition</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {details.overlaps.length === 0 ? (
+                <p className="text-green-400">
+                  ✅ Aucune superposition à risque détectée.
+                </p>
+              ) : (
+                <ul className="space-y-3">
+                  {details.overlaps.map((overlap, index) => (
+                    <li key={index} className="text-red-400 font-medium">
+                      ⚠️ Chevauchement avec :{" "}
+                      <span style={{ color: overlap.layer_color }}>
+                        {overlap.layer_name}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+
+          <Button 
+            onClick={handleDownload} 
+            disabled={isDownloading}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            {isDownloading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Génération...
+              </>
             ) : (
-              <ul className="space-y-3">
-                {details.overlaps.map((overlap, index) => (
-                  <li key={index} className="text-red-600 font-medium">
-                    ⚠️ Chevauchement avec :{" "}
-                    <span style={{ color: overlap.layer_color }}>
-                      {overlap.layer_name}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              "Télécharger le Rapport PDF"
             )}
-          </CardContent>
-        </Card>
+          </Button>
+        </div>
 
-        <Button onClick={handleDownload} disabled={isDownloading}>
-          {isDownloading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Génération...
-            </>
-          ) : (
-            "Télécharger le Rapport PDF"
-          )}
-        </Button>
-      </div>
-
-      {/* <div className="lg:col-span-2 h-[50vh] lg:h-full rounded-lg overflow-hidden"> */}
-      {/* Vous devrez modifier MapDisplay pour qu'il puisse afficher plusieurs GeoJSON */}
-      {/* Pour l'instant, il n'affiche que la parcelle principale */}
-      {/* <MapDisplay geojsonData={details.geojson} /> */}
-      {/* </div> */}
-
-      <div className="lg:col-span-2 h-[50vh] lg:h-full rounded-lg overflow-hidden">
-        {/* --- MODIFICATION PRINCIPALE ICI --- */}
-        <MapDisplay
-          mainGeoJson={details.geojson}
-          overlayLayers={visibleLayers}
-        />
-        {/* --- FIN DE LA MODIFICATION --- */}
+        <div className="lg:col-span-2 h-[50vh] lg:h-full rounded-lg overflow-hidden">
+          <MapDisplay
+            mainGeoJson={details.geojson}
+            overlayLayers={visibleLayers}
+          />
+        </div>
       </div>
     </div>
   );
