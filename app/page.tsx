@@ -13,18 +13,18 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-40">
-        <div className="container mx-auto mobile-padding py-3 sm:py-4">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-3">
-              <Image src="/logo-andf.png" alt="ANDF Logo" width={120} height={40} className="h-8 sm:h-10 w-auto" />
-              <Image src="/logo_Ayigba-removebg-preview.png" alt="AYIGBA Logo" width={150} height={50} className="h-10 sm:h-12 w-auto" />
+              <Image src="/logo-andf.png" alt="ANDF Logo" width={120} height={40} className="h-6 sm:h-8 lg:h-10 w-auto" />
+              <Image src="/logo_Ayigba-removebg-preview.png" alt="AYIGBA Logo" width={150} height={50} className="h-8 sm:h-10 lg:h-12 w-auto" />
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
               <div className="hidden sm:flex items-center space-x-4">
-                <Button variant="ghost" size="sm" className="touch-target">
+                <Button variant="ghost" size="sm" className="text-sm">
                   Aide
                 </Button>
-                <Button variant="outline" size="sm" className="touch-target bg-transparent">
+                <Button variant="outline" size="sm" className="text-sm bg-transparent">
                   Contact
                 </Button>
               </div>

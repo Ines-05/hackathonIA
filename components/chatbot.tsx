@@ -4,13 +4,21 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { MessageCircle, X, Send, Mic, MicOff } from "lucide-react"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { MessageCircle, X, Send, Mic, MicOff, ChevronDown, ChevronRight, ExternalLink } from "lucide-react"
+import { ChatRequest, ChatResponse, BackendError } from "@/types/backend"
 
 interface Message {
   id: string
   text: string
+  sources?: string[]
   isUser: boolean
   timestamp: Date
+}
+
+interface ParsedResponse {
+  mainText: string
+  sources: string[]
 }
 
 const predefinedQuestions = [
@@ -20,6 +28,46 @@ const predefinedQuestions = [
   "Quels documents sont acceptés ?",
   "Combien coûte la vérification ?",
 ]
+
+// Fonction pour parser la réponse et extraire les sources
+const parseResponseWithSources = (response: string): ParsedResponse => {
+  // Rechercher les patterns de sources
+  const sourcePattern = /Sources?\s*:\s*([\s\S]*?)(?:\n\n|$)/i
+  const linkPattern = /https:\/\/[^\s]+/g
+  
+  let mainText = response
+  let sources: string[] = []
+  
+  // Extraire la section "Sources:"
+  const sourceMatch = response.match(sourcePattern)
+  if (sourceMatch) {
+    mainText = response.replace(sourceMatch[0], '').trim()
+    const sourcesText = sourceMatch[1]
+    
+    // Extraire les liens des sources
+    const links = sourcesText.match(linkPattern)
+    if (links) {
+      sources = links
+    }
+  } else {
+    // Rechercher directement les liens dans le texte
+    const links = response.match(linkPattern)
+    if (links) {
+      sources = links
+      // Supprimer les liens du texte principal
+      mainText = response.replace(linkPattern, '').replace(/\*\s*/g, '').trim()
+    }
+  }
+  
+  // Nettoyer le texte principal
+  mainText = mainText
+    .replace(/\*\s*https[^\s]*/g, '') // Supprimer les liens précédés d'astérisques
+    .replace(/Sources?\s*:\s*/gi, '') // Supprimer les mentions "Sources:"
+    .replace(/\n\s*\n/g, '\n') // Nettoyer les doubles sauts de ligne
+    .trim()
+  
+  return { mainText, sources }
+}
 
 const botResponses: { [key: string]: string } = {
   "qu'est-ce qu'un titre foncier":
@@ -105,38 +153,44 @@ export default function Chatbot() {
     setIsTyping(true)
 
     try {
-      // Appel à l'API réelle
-      const response = await fetch("https://active-crayfish-charb-1bc27eb4.koyeb.app/chat/", {
+      // Appel à l'API réelle avec types stricts
+      const requestBody: ChatRequest = {
+        message: text.trim(),
+      }
+      
+      const response = await fetch("http://192.168.1.179:5001/chat/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          message: text.trim(),
-        }),
+        body: JSON.stringify(requestBody),
       })
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData: BackendError = await response.json();
+          errorMessage = errorData.message || errorData.detail || errorMessage;
+        } catch (e) {
+          // Si on ne peut pas parser l'erreur, utiliser le message par défaut
+        }
+        throw new Error(errorMessage);
       }
 
-      const data = await response.json()
+      const data: ChatResponse = await response.json()
       
-      // Extraire la réponse de l'API et nettoyer le texte
-      let botReply = data.reply || "Je n'ai pas pu traiter votre demande. Veuillez réessayer."
-      
-      // Séparer le contenu principal des sources
-      const sourcesIndex = botReply.indexOf("\n\nSources:")
-      if (sourcesIndex !== -1) {
-        botReply = botReply.substring(0, sourcesIndex).trim()
+      // Validation stricte de la réponse
+      if (!data.reply || typeof data.reply !== 'string') {
+        throw new Error("Réponse invalide du serveur");
       }
       
-      // Nettoyer le texte en supprimant les liens en markdown s'il y en a
-      botReply = botReply.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      // Parser la réponse pour séparer le texte principal des sources
+      const parsedResponse = parseResponseWithSources(data.reply)
       
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: botReply,
+        text: parsedResponse.mainText,
+        sources: parsedResponse.sources.length > 0 ? parsedResponse.sources : undefined,
         isUser: false,
         timestamp: new Date(),
       }
@@ -376,7 +430,45 @@ export default function Chatbot() {
                       : "bg-muted text-foreground rounded-bl-none"
                   }`}
                 >
-                  <p className="text-base">{message.text}</p>
+                  <p className="text-base whitespace-pre-wrap">{message.text}</p>
+                  
+                  {/* Section Sources pour les messages du bot */}
+                  {!message.isUser && message.sources && message.sources.length > 0 && (
+                    <div className="mt-3 pt-2 border-t border-gray-200">
+                      <Collapsible>
+                        <CollapsibleTrigger asChild>
+                          <Button variant="ghost" size="sm" className="flex items-center space-x-1 text-xs p-1 h-auto hover:bg-gray-100">
+                            <ChevronRight className="w-3 h-3 ui-state-open:rotate-90 transition-transform" />
+                            <span>Voir les sources ({message.sources.length})</span>
+                          </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="mt-2">
+                          <div className="bg-gray-50 p-2 rounded text-xs">
+                            <p className="font-medium text-gray-700 mb-2">Sources de référence :</p>
+                            <div className="space-y-1">
+                              {message.sources.map((source, index) => (
+                                <div key={index} className="flex items-start space-x-2">
+                                  <span className="text-gray-500 mt-0.5 font-mono">{index + 1}.</span>
+                                  <a
+                                    href={source}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-800 underline flex items-start space-x-1 break-all group"
+                                  >
+                                    <span className="flex-1">
+                                      {source.length > 60 ? `${source.substring(0, 57)}...` : source}
+                                    </span>
+                                    <ExternalLink className="w-3 h-3 mt-0.5 flex-shrink-0 opacity-60 group-hover:opacity-100" />
+                                  </a>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    </div>
+                  )}
+                  
                   <p className="text-sm opacity-70 mt-1">
                     {message.timestamp.toLocaleTimeString("fr-FR", {
                       hour: "2-digit",

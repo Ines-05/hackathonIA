@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -13,88 +15,121 @@ import {
   CheckCircle,
   AlertTriangle,
   XCircle,
-  ZoomIn,
-  ZoomOut,
-  RotateCcw,
   ChevronDown,
   ChevronRight,
-  Upload,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { AnalysisResponse, Overlap } from "@/types/backend"
+
+// Import dynamique de la carte pour éviter les erreurs SSR
+const MapDisplay = dynamic(() => import("@/components/MapDisplay"), {
+  ssr: false,
+})
 
 export default function ResultsPage() {
-  const [mapLoaded, setMapLoaded] = useState(false)
-  const [zoomLevel, setZoomLevel] = useState(15)
-  const [parcelStatus] = useState<"available" | "disputed" | "titled">("available") // Mock status
+  const [result, setResult] = useState<AnalysisResponse | null>(null)
+  const [isDownloading, setIsDownloading] = useState(false)
   const [legendOpen, setLegendOpen] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
-    // Simulate map loading
-    const timer = setTimeout(() => {
-      setMapLoaded(true)
-    }, 1500)
-    return () => clearTimeout(timer)
-  }, [])
+    const storedResult = localStorage.getItem("analysisResult")
+    if (storedResult) {
+      try {
+        const parsed = JSON.parse(storedResult)
+        setResult(parsed)
+      } catch (error) {
+        console.error("Erreur lors du parsing des résultats:", error)
+        router.push("/upload")
+      }
+    } else {
+      // Si aucune donnée n'est trouvée, rediriger vers la page d'upload
+      router.push("/upload")
+    }
+  }, [router])
 
-  const getStatusInfo = (status: string) => {
-    switch (status) {
-      case "available":
-        return {
-          label: "Disponible",
-          color: "bg-green-500",
-          icon: CheckCircle,
-          description: "Cette parcelle est disponible pour titrage",
+  const handleDownload = async () => {
+    if (!result) return
+    
+    setIsDownloading(true)
+    try {
+      const response = await fetch(
+        "http://192.168.1.179:5001/workflow/generate-report",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(result),
         }
-      case "disputed":
-        return {
-          label: "En litige",
-          color: "bg-orange-500",
-          icon: AlertTriangle,
-          description: "Cette parcelle fait l'objet d'un litige",
-        }
-      case "titled":
-        return {
-          label: "Déjà titrée",
-          color: "bg-red-500",
-          icon: XCircle,
-          description: "Cette parcelle possède déjà un titre foncier",
-        }
-      default:
-        return {
-          label: "Inconnu",
-          color: "bg-gray-500",
-          icon: AlertTriangle,
-          description: "Statut inconnu",
-        }
+      )
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la génération du PDF.")
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = "rapport_analyse_fonciere.pdf"
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (error: any) {
+      console.error("Erreur de téléchargement:", error)
+      alert(`Erreur de téléchargement: ${error.message}`)
+    } finally {
+      setIsDownloading(false)
     }
   }
 
-  const statusInfo = getStatusInfo(parcelStatus)
+  const getOverlapStatusInfo = (overlaps: Overlap[]) => {
+    if (overlaps.length === 0) {
+      return {
+        label: "Aucun conflit",
+        color: "bg-green-500",
+        icon: CheckCircle,
+        description: "Aucune superposition à risque détectée",
+      }
+    } else {
+      return {
+        label: "Conflits détectés",
+        color: "bg-red-500", 
+        icon: AlertTriangle,
+        description: `${overlaps.length} superposition(s) détectée(s)`,
+      }
+    }
+  }
+
+  if (!result) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-lg text-gray-600">Chargement des résultats...</p>
+        </div>
+      </div>
+    )
+  }
+
+  const statusInfo = getOverlapStatusInfo(result.overlaps)
   const StatusIcon = statusInfo.icon
 
-  const handleZoomIn = () => {
-    setZoomLevel((prev) => Math.min(prev + 1, 20))
-  }
-
-  const handleZoomOut = () => {
-    setZoomLevel((prev) => Math.max(prev - 1, 10))
-  }
-
-  const handleReset = () => {
-    setZoomLevel(15)
-  }
-
-  const downloadReport = () => {
-    // In a real app, this would generate and download a PDF
-    const link = document.createElement("a")
-    link.href = "/rapport-officiel-andf.jpg"
-    link.download = "rapport-parcelle-andf.pdf"
-    link.click()
-  }
-
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-white relative">
+      {/* Background Mascot */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute bottom-10 right-10 opacity-5">
+          <Image
+            src="/Mascotte.png"
+            alt="Mascotte AYIGBA"
+            width={300}
+            height={300}
+            className="w-64 h-64 lg:w-80 lg:h-80 object-contain animate-float"
+          />
+        </div>
+      </div>
       {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4">
@@ -102,333 +137,213 @@ export default function ResultsPage() {
             <Link href="/upload" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
               <ArrowLeft className="w-5 h-5" />
               <div className="flex items-center space-x-2">
-                <Image src="/logo_Ayigba-removebg-preview.png" alt="AYIGBA Logo" width={40} height={40} className="w-10 h-10" />
+                <Image src="/logo-andf.png" alt="ANDF Logo" width={120} height={40} className="h-8 w-auto" />
+                <Image src="/logo_Ayigba-removebg-preview.png" alt="AYIGBA Logo" width={150} height={50} className="h-10 w-auto" />
               </div>
             </Link>
             <div className="flex items-center space-x-4">
-              <div className="text-sm text-muted-foreground">Étape 3 sur 3</div>
+              <div className="text-sm text-muted-foreground">Résultats d'analyse</div>
             </div>
           </div>
         </div>
       </header>
 
+      {/* Main Content */}
       <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="mb-8">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className={`w-3 h-3 rounded-full ${statusInfo.color} animate-pulse`} />
-            <h1 className="text-3xl font-bold text-foreground">Résultats de l'analyse</h1>
-          </div>
-          <p className="text-muted-foreground">Votre parcelle a été localisée et analysée avec succès</p>
-        </div>
-
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Map Section */}
-          <div className="lg:col-span-2">
-            <Card className="p-0 overflow-hidden">
-              <div className="relative h-96 lg:h-[600px] bg-gradient-to-br from-primary/10 to-secondary/10">
-                {!mapLoaded ? (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                      <p className="text-muted-foreground">Chargement de la carte...</p>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    {/* Mock Map Interface */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-blue-50" 
-                         style={{ transform: `scale(${1 + (zoomLevel - 15) * 0.1})`, transformOrigin: 'center center' }}>
-                      {/* Grid pattern to simulate map */}
-                      <div className="absolute inset-0 opacity-20">
-                        <div className="grid grid-cols-8 grid-rows-8 h-full">
-                          {Array.from({ length: 64 }).map((_, i) => (
-                            <div key={i} className="border border-gray-300" />
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Highlighted Parcel - Size changes with zoom */}
-                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                        <div 
-                          className="bg-[#2e7d32]/30 border-4 border-[#2e7d32] rounded-lg animate-pulse-green relative transition-all duration-300"
-                          style={{ 
-                            width: `${8 + (zoomLevel - 10) * 2}rem`, 
-                            height: `${6 + (zoomLevel - 10) * 1.5}rem` 
-                          }}
-                        >
-                          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
-                            <div className="bg-[#2e7d32] text-white px-3 py-1 rounded-full text-sm font-medium">
-                              Votre parcelle
-                            </div>
-                          </div>
-                          <MapPin 
-                            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[#2e7d32] transition-all duration-300" 
-                            style={{ width: `${1.5 + (zoomLevel - 15) * 0.1}rem`, height: `${1.5 + (zoomLevel - 15) * 0.1}rem` }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Mock surrounding parcels - Size and position change with zoom */}
-                      <div 
-                        className="absolute bg-gray-200 border-2 border-gray-400 rounded opacity-60 transition-all duration-300"
-                        style={{ 
-                          top: '25%', 
-                          left: '25%',
-                          width: `${5 + (zoomLevel - 15) * 0.5}rem`, 
-                          height: `${4 + (zoomLevel - 15) * 0.4}rem` 
-                        }}
-                      />
-                      <div 
-                        className="absolute bg-gray-200 border-2 border-gray-400 rounded opacity-60 transition-all duration-300"
-                        style={{ 
-                          top: '75%', 
-                          right: '25%',
-                          width: `${6 + (zoomLevel - 15) * 0.6}rem`, 
-                          height: `${5 + (zoomLevel - 15) * 0.5}rem` 
-                        }}
-                      />
-                      <div 
-                        className="absolute bg-gray-200 border-2 border-gray-400 rounded opacity-60 transition-all duration-300"
-                        style={{ 
-                          bottom: '25%', 
-                          left: '33%',
-                          width: `${4 + (zoomLevel - 15) * 0.4}rem`, 
-                          height: `${3 + (zoomLevel - 15) * 0.3}rem` 
-                        }}
-                      />
-                    </div>
-
-                    {/* Map Controls */}
-                    <div className="absolute top-4 right-4 flex flex-col space-y-2">
-                      <Button size="sm" variant="secondary" onClick={handleZoomIn} className="w-10 h-10 p-0">
-                        <ZoomIn className="w-4 h-4" />
-                      </Button>
-                      <Button size="sm" variant="secondary" onClick={handleZoomOut} className="w-10 h-10 p-0">
-                        <ZoomOut className="w-4 h-4" />
-                      </Button>
-                      <Button size="sm" variant="secondary" onClick={handleReset} className="w-10 h-10 p-0">
-                        <RotateCcw className="w-4 h-4" />
-                      </Button>
-                    </div>
-
-                    {/* Zoom Level Indicator */}
-                    <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm">
-                      Zoom: {zoomLevel}x
-                    </div>
-
-                    {/* Coordinates */}
-                    <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm">
-                      6.3703° N, 2.3912° E
-                    </div>
-                  </>
-                )}
-              </div>
-            </Card>
-
-            {/* Legend (Collapsible under map) */}
-            <div className="mt-4">
-              <Collapsible open={legendOpen} onOpenChange={setLegendOpen}>
-                <CollapsibleTrigger asChild>
-                  <Button variant="outline" className="w-full justify-between bg-white/80 backdrop-blur-sm">
-                    <span className="flex items-center space-x-2">
-                      <span>Légende de la carte</span>
-                    </span>
-                    {legendOpen ? (
-                      <ChevronDown className="h-4 w-4 transition-transform" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4 transition-transform" />
-                    )}
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <Card className="p-4 mt-2 bg-white/80 backdrop-blur-sm">
-                    <div className="grid grid-cols-1 gap-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-4 h-4 bg-blue-500 rounded" />
-                        <span className="text-sm">AIF (Association d'Intérêts Foncier)</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-4 h-4 bg-green-600 rounded" />
-                        <span className="text-sm">Aires protégées</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-4 h-4 bg-cyan-500 rounded" />
-                        <span className="text-sm">DPL (Domaine Public Lagunaire)</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-4 h-4 bg-teal-500 rounded" />
-                        <span className="text-sm">DPM (Domaine Public Maritime)</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-4 h-4 bg-orange-400 rounded" />
-                        <span className="text-sm">Titres Fonciers démembrés (TF démembrés)</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-4 h-4 bg-purple-500 rounded" />
-                        <span className="text-sm">Titres Fonciers reconstitués (TF reconstitués)</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-4 h-4 bg-yellow-500 rounded" />
-                        <span className="text-sm">TF en cours (Titre foncier en cours)</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-4 h-4 bg-indigo-500 rounded" />
-                        <span className="text-sm">Parcelles objets d'enregistrement individuel</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-4 h-4 bg-gray-700 rounded" />
-                        <span className="text-sm">Titres Fonciers de l'État (TF_État)</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-4 h-4 bg-red-500 rounded" />
-                        <span className="text-sm">Zones litigieuses</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-4 h-4 bg-red-300 rounded border-2 border-red-500" />
-                        <span className="text-sm">Zone de restrictions</span>
-                      </div>
-                    </div>
-                  </Card>
-                </CollapsibleContent>
-              </Collapsible>
-            </div>
-          </div>
-
-          {/* Right Side Panel */}
-          <div className="space-y-6">
+          
+          {/* Sidebar - Résultats */}
+          <div className="lg:col-span-1 space-y-6">
+            
             {/* Status Card */}
-            <Card className="p-6">
+            <Card className="p-6 bg-white/90 backdrop-blur-sm">
               <div className="flex items-center space-x-3 mb-4">
                 <div className={`w-12 h-12 ${statusInfo.color} rounded-full flex items-center justify-center`}>
                   <StatusIcon className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">Statut de la parcelle</h3>
-                  <Badge variant="secondary" className="mt-1">
-                    {statusInfo.label}
-                  </Badge>
+                  <h3 className="font-semibold text-lg">{statusInfo.label}</h3>
+                  <p className="text-sm text-gray-600">{statusInfo.description}</p>
                 </div>
               </div>
-              <p className="text-muted-foreground text-sm mb-4">{statusInfo.description}</p>
 
-              {parcelStatus === "available" && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <p className="text-green-800 text-sm font-medium">
-                    ✅ Bonne nouvelle ! Cette parcelle peut faire l'objet d'une demande de titre foncier.
-                  </p>
+              {/* Overlaps Details */}
+              {result.overlaps.length > 0 && (
+                <div className="space-y-2 mt-4">
+                  <h4 className="font-medium text-gray-800">Détails des conflits :</h4>
+                  {result.overlaps.map((overlap, index) => (
+                    <div key={index} className="bg-red-50 p-3 rounded-lg border border-red-200">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <AlertTriangle className="w-4 h-4 text-red-600" />
+                        <span className="font-medium text-red-800">{overlap.layer_name}</span>
+                      </div>
+                      <p className="text-sm text-red-700">
+                        {overlap.overlapping_count} élément(s) en conflit détecté(s)
+                      </p>
+                    </div>
+                  ))}
                 </div>
               )}
 
-              {parcelStatus === "disputed" && (
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                  <p className="text-orange-800 text-sm font-medium">
-                    ⚠️ Attention : Cette parcelle fait l'objet d'un litige. Contactez un expert juridique.
-                  </p>
-                </div>
-              )}
-
-              {parcelStatus === "titled" && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="text-red-800 text-sm font-medium">
-                    ❌ Cette parcelle possède déjà un titre foncier valide.
+              {/* Success Message */}
+              {result.overlaps.length === 0 && (
+                <div className="bg-green-50 p-3 rounded-lg border border-green-200 mt-4">
+                  <p className="text-green-800">
+                    ✅ Votre parcelle ne présente aucun conflit avec les couches cadastrales existantes.
                   </p>
                 </div>
               )}
             </Card>
 
-            {/* Actions Section - Moved under status */}
-            <Card className="p-6">
-              <h3 className="font-semibold text-lg mb-6 flex items-center">
-                <Download className="w-5 h-5 mr-2 text-[#2e7d32]" />
-                Actions à faire
-              </h3>
-              <div className="space-y-4">
+            {/* Section des boutons d'action */}
+            <div className="space-y-4">
+              {/* Mascotte animée pour desktop - repositionnée */}
+              <div className="hidden lg:block relative mb-6">
+                <div className="flex justify-start">
+                  <div className="relative">
+                    <Image
+                      src="/Mascotte.png"
+                      alt="Mascotte AYIGBA"
+                      width={80}
+                      height={80}
+                      className="w-14 h-14 object-contain animate-bounce mascot-sway"
+                    />
+                    {/* Bulle de dialogue */}
+                    <div className="absolute -top-12 -right-4 bg-white rounded-lg p-2 shadow-lg border-2 border-green-200 animate-pulse min-w-max">
+                      <div className="text-xs font-medium text-green-700">
+                        Téléchargez votre rapport !
+                      </div>
+                      <div className="absolute bottom-[-8px] left-6 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-green-200"></div>
+                    </div>
+                    {/* Animation de pointage vers le bouton */}
+                    <div className="absolute -bottom-2 right-2 animate-bounce">
+                      <div className="text-lg transform rotate-90">👉🏿</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Version mobile de la mascotte - au-dessus du bouton */}
+              <div className="block lg:hidden mb-4">
+                <div className="flex justify-center">
+                  <div className="relative">
+                    <Image
+                      src="/Mascotte.png"
+                      alt="Mascotte AYIGBA"
+                      width={64}
+                      height={64}
+                      className="w-12 h-12 object-contain animate-bounce mascot-sway"
+                    />
+                    {/* Bulle de dialogue mobile */}
+                    <div className="absolute -top-10 -left-8 w-32 bg-white rounded-lg p-2 shadow-lg border-2 border-green-200 animate-pulse">
+                      <div className="text-xs font-medium text-green-700 text-center">
+                        Téléchargez ici !
+                      </div>
+                      <div className="absolute bottom-[-8px] left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-green-200"></div>
+                    </div>
+                    {/* Flèche pointant vers le bas */}
+                    <div className="absolute top-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+                      <div className="text-base">👇🏿</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bouton de téléchargement */}
+              <Button 
+                onClick={handleDownload} 
+                disabled={isDownloading}
+                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white py-6 text-lg font-semibold"
+              >
+                <Download className="w-5 h-5 mr-2" />
+                {isDownloading ? "Génération du PDF..." : "Télécharger le Rapport PDF"}
+              </Button>
+
+              {/* Bouton Nouvelle demande */}
+              <Link href="/upload" className="block w-full">
                 <Button 
-                  onClick={downloadReport} 
-                  size="lg"
-                  className="w-full bg-[#2e7d32] hover:bg-[#1b5e20] text-white font-semibold py-4 px-6 text-lg rounded-lg btn-animate hover-glow shadow-lg hover:shadow-xl transition-all duration-300"
+                  variant="outline"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white border-blue-600 hover:border-blue-700 py-4 text-base font-medium"
                 >
-                  <Download className="w-5 h-5 mr-3" />
-                  Télécharger le rapport PDF
+                  Nouvelle demande
                 </Button>
-                <Link href="/upload" className="w-full block">
-                  <Button 
-                    size="lg"
-                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-4 px-6 text-lg rounded-lg btn-animate shadow-lg hover:shadow-xl transition-all duration-300"
-                  >
-                    <Upload className="w-5 h-5 mr-3" />
-                    Nouvelle vérification
+              </Link>
+            </div>
+
+            {/* Legend */}
+            <Collapsible open={legendOpen} onOpenChange={setLegendOpen}>
+              <Card className="bg-white/90 backdrop-blur-sm">
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" className="w-full justify-between p-6">
+                    <span className="font-semibold">Légende des Couches</span>
+                    {legendOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                   </Button>
-                </Link>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="px-6 pb-6">
+                  <div className="space-y-3 text-sm">
+                    <div className="grid grid-cols-1 gap-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 bg-blue-500 rounded"></div>
+                        <span>AIF (Association d'Intérêts Fonciers)</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 bg-green-600 rounded"></div>
+                        <span>Aires protégées</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 bg-cyan-500 rounded"></div>
+                        <span>DPL (Domaine Public Lagunaire)</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 bg-blue-700 rounded"></div>
+                        <span>DPM (Domaine Public Maritime)</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 bg-orange-500 rounded"></div>
+                        <span>Titres Fonciers démembrés</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 bg-purple-500 rounded"></div>
+                        <span>Titres Fonciers reconstitués</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 bg-yellow-500 rounded"></div>
+                        <span>Titres Fonciers en cours</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 bg-pink-500 rounded"></div>
+                        <span>Parcelles d'enregistrement individuel</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 bg-gray-700 rounded"></div>
+                        <span>Titres Fonciers de l'État</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 bg-red-600 rounded"></div>
+                        <span>Zones litigieuses</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 bg-amber-600 rounded"></div>
+                        <span>Zones de restrictions</span>
+                      </div>
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          </div>
+
+          {/* Map Section */}
+          <div className="lg:col-span-2">
+            <Card className="h-[600px] lg:h-[700px] overflow-hidden bg-white/90 backdrop-blur-sm">
+              <div className="h-full">
+                <MapDisplay geojsonData={result.geojson} />
               </div>
             </Card>
           </div>
         </div>
-
-        {/* Details Section - Moved to bottom after everything */}
-        <div className="mt-12">
-          <Card className="p-6">
-            <h3 className="font-semibold text-lg mb-6">Détails complets de la parcelle</h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="space-y-4">
-                <h4 className="font-medium text-[#2e7d32]">Informations générales</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Superficie</span>
-                    <span className="font-medium">2,450 m²</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Périmètre</span>
-                    <span className="font-medium">198.2 m</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Référence</span>
-                    <span className="font-medium">CTN-001-2025</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h4 className="font-medium text-[#2e7d32]">Localisation</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Commune</span>
-                    <span className="font-medium">Cotonou</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Arrondissement</span>
-                    <span className="font-medium">1er Arrondissement</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Quartier</span>
-                    <span className="font-medium">Haie-Vive</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h4 className="font-medium text-[#2e7d32]">Classification</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Zone</span>
-                    <span className="font-medium">Résidentielle</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Usage autorisé</span>
-                    <span className="font-medium">Habitation</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Date d'analyse</span>
-                    <span className="font-medium">25/09/2025</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </div>
       </div>
 
-      {/* Integrated Chatbot Component */}
       <Chatbot />
     </div>
   )

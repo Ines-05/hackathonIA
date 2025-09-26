@@ -661,10 +661,95 @@ body {
   to { transform: rotate(0deg); }
 }
 
+@keyframes mascot-analyzing {
+  0% { 
+    transform: rotate(0deg) scale(1) translateY(0px); 
+    filter: hue-rotate(0deg);
+  }
+  25% { 
+    transform: rotate(90deg) scale(1.05) translateY(-2px); 
+    filter: hue-rotate(90deg);
+  }
+  50% { 
+    transform: rotate(180deg) scale(1.1) translateY(-4px); 
+    filter: hue-rotate(180deg);
+  }
+  75% { 
+    transform: rotate(270deg) scale(1.05) translateY(-2px); 
+    filter: hue-rotate(270deg);
+  }
+  100% { 
+    transform: rotate(360deg) scale(1) translateY(0px); 
+    filter: hue-rotate(360deg);
+  }
+}
+
+/* Animations spécifiques pour la mascotte */
+@keyframes mascot-sway {
+  0%, 100% { 
+    transform: translateX(0px) rotate(0deg); 
+  }
+  25% { 
+    transform: translateX(-2px) rotate(-1deg); 
+  }
+  50% { 
+    transform: translateX(0px) rotate(0deg); 
+  }
+  75% { 
+    transform: translateX(2px) rotate(1deg); 
+  }
+}
+
+@keyframes mascot-sway-fast {
+  0%, 100% { 
+    transform: translateX(0px) rotate(0deg) scale(1); 
+  }
+  25% { 
+    transform: translateX(-4px) rotate(-2deg) scale(1.05); 
+  }
+  50% { 
+    transform: translateX(0px) rotate(0deg) scale(1.1); 
+  }
+  75% { 
+    transform: translateX(4px) rotate(2deg) scale(1.05); 
+  }
+}
+
+@keyframes mascot-excited {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg) scale(1); 
+  }
+  25% { 
+    transform: translateY(-5px) rotate(-3deg) scale(1.1); 
+  }
+  50% { 
+    transform: translateY(-8px) rotate(0deg) scale(1.15); 
+  }
+  75% { 
+    transform: translateY(-3px) rotate(3deg) scale(1.1); 
+  }
+}
+
 .animate-float {
   animation: float 3s ease-in-out infinite;
 }
 
 .animate-reverse {
   animation: reverse-spin 1.5s linear infinite;
+}
+
+.mascot-sway {
+  animation: mascot-sway 4s ease-in-out infinite;
+}
+
+.mascot-sway-fast {
+  animation: mascot-sway-fast 1s ease-in-out infinite;
+}
+
+.mascot-excited {
+  animation: mascot-excited 0.8s ease-in-out infinite;
+}
+
+.mascot-analyzing {
+  animation: mascot-analyzing 2s ease-in-out infinite;
 }

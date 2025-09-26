@@ -9,6 +9,14 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/backend/:path*',
+        destination: 'http://192.168.1.179:5001/:path*',
+      },
+    ]
+  },
 }
 
 export default nextConfig
